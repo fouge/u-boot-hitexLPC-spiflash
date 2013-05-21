@@ -1757,6 +1757,7 @@ ulong flash_get_size (phys_addr_t base, int banknum)
 
 	info->start[0] = (ulong)map_physmem(base, info->portwidth, MAP_NOCACHE);
 
+
 	if (flash_detect_cfi (info, &qry)) {
 		info->vendor = le16_to_cpu(qry.p_id);
 		info->ext_addr = le16_to_cpu(qry.p_adr);

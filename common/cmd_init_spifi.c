@@ -20,19 +20,14 @@
 /* detect_spifi
 /*******************************************************************/
 
+/* SPIFIobj obj;
+SPIFI_RTNS * pSpifi;
+SPIFIopers opers; */
 
 
 int do_detect_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-	unsigned long size = 0;
-	
-		/* Init: no FLASHes known */
-	flash_info_t flash_info;	/* FLASH chips info */
 
-			flash_info.flash_id = FLASH_UNKNOWN;
-
-			flash_get_size (0x14000000, 1);
-			size += flash_info.size;
 	return 1;
 
 }
