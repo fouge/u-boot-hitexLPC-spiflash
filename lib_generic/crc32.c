@@ -197,9 +197,7 @@ uint32_t ZEXPORT crc32_no_comp(uint32_t crc, const Bytef *buf, uInt len)
     len = len >> 2;
     for (--b; len; --len) {
 	 /* load data 32 bits wide, xor data 32 bits wide. */
-     /* Some problem with the debugger here : crc ^= *++b ; */ /* use pre increment for speed */
-     b++;
-	 crc ^= *b;
+	 crc ^= *++b; /* use pre increment for speed */
 	 DO_CRC(0);
 	 DO_CRC(0);
 	 DO_CRC(0);

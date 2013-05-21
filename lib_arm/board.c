@@ -298,7 +298,6 @@ void start_armboot (void)
 
 	monitor_flash_len = _bss_start - _armboot_start;
 
-	/* 11 functions to initialize the board */
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
 		if ((*init_fnc_ptr)() != 0) {
 			hang ();

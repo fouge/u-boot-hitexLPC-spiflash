@@ -33,12 +33,6 @@
  * Definitions
  */
 
-#define SPI_SCL  spi_scl
-#define SPI_SDA  spi_sda
-#define SPI_READ spi_read()
-#define SPI_DELAY udelay(2)
-
-
 #ifdef DEBUG_SPI
 #define PRINTD(fmt,args...)	printf (fmt ,##args)
 #else
@@ -177,9 +171,9 @@ int  spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 		else
 			SPI_SCL(cpol);
 		tmpdin	<<= 1;
-	 	tmpdin	|= SPI_READ;
+		tmpdin	|= SPI_READ;
 		tmpdout	<<= 1;
-	 	SPI_DELAY;
+		SPI_DELAY;
 		if (cpha)
 			SPI_SCL(cpol);
 	}

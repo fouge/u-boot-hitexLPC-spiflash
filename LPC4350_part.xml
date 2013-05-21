@@ -66,7 +66,6 @@
 <peripheralInstance derived_from="GPIO-PORT" id="GPIO-PORT" location="0x400f4000"/>
 <peripheralInstance derived_from="SPI" id="SPI" location="0x40100000"/>
 <peripheralInstance derived_from="SGPIO" id="SGPIO" location="0x40101000"/>
-<peripheralInstance derived_from="EEPROM" id="EEPROM" location="0x4000e000"/>
 </chip>
 <processor><name gcc_name="cortex-m4">Cortex-M4</name>
 <family>Cortex-M</family>

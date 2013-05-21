@@ -1598,8 +1598,8 @@ void __flash_cmd_reset(flash_info_t *info)
 	 * the reset command in both Intel and AMD variants, in the hope
 	 * that AMD flash roms ignore the Intel command.
 	 */
-	flash_write_cmd(info, 0, 0, AMD_CMD_RESET); /* cmd f0 */
-	flash_write_cmd(info, 0, 0, FLASH_CMD_RESET);/* cmd ff */
+	flash_write_cmd(info, 0, 0, AMD_CMD_RESET);
+	flash_write_cmd(info, 0, 0, FLASH_CMD_RESET);
 }
 void flash_cmd_reset(flash_info_t *info)
 	__attribute__((weak,alias("__flash_cmd_reset")));
@@ -1661,7 +1661,7 @@ static int __flash_detect_cfi (flash_info_t * info, struct cfi_qry *qry)
 
 static int flash_detect_cfi (flash_info_t * info, struct cfi_qry *qry)
 {
-	debug ("Detecting CFI flash memory, base address : 0x%x \n", info->start[0]);
+	debug ("flash detect cfi\n");
 
 	for (info->portwidth = CONFIG_SYS_FLASH_CFI_WIDTH;
 	     info->portwidth <= FLASH_CFI_64BIT; info->portwidth <<= 1) {
@@ -1756,7 +1756,6 @@ ulong flash_get_size (phys_addr_t base, int banknum)
 #endif
 
 	info->start[0] = (ulong)map_physmem(base, info->portwidth, MAP_NOCACHE);
-
 
 	if (flash_detect_cfi (info, &qry)) {
 		info->vendor = le16_to_cpu(qry.p_id);
@@ -1933,8 +1932,7 @@ unsigned long flash_init (void)
 #define BANK_BASE(i)	(((phys_addr_t [CFI_MAX_FLASH_BANKS])CONFIG_SYS_FLASH_BANKS_LIST)[i])
 
 	/* Init: no FLASHes known */
-	for (i = 0; i < CONFIG_SYS_MAX_FLASH_BANKS-1; ++i)
-	{
+	for (i = 0; i < CONFIG_SYS_MAX_FLASH_BANKS-1; ++i) {
 		flash_info[i].flash_id = FLASH_UNKNOWN;
 
 		if (!flash_detect_legacy (BANK_BASE(i), i))
@@ -2001,8 +1999,6 @@ unsigned long flash_init (void)
 	/* Monitor protection ON by default */
 #if (CONFIG_SYS_MONITOR_BASE >= CONFIG_SYS_FLASH_BASE) && \
 	(!defined(CONFIG_MONITOR_IS_IN_RAM))
-	/* Monitor is in RAM here */
-
 	flash_protect (FLAG_PROTECT_SET,
 		       CONFIG_SYS_MONITOR_BASE,
 		       CONFIG_SYS_MONITOR_BASE + monitor_flash_len  - 1,

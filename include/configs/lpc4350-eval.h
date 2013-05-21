@@ -339,7 +339,7 @@
 #undef CONFIG_CMD_NFS
 #undef CONFIG_CMD_SOURCE
 #undef CONFIG_CMD_XIMG
-#define CONFIG_CMD_SF /* Serial Flash commands */
+// #define CONFIG_CMD_SF /* Serial Flash commands */
 
 /*
  * To save memory disable long help
