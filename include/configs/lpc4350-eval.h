@@ -102,7 +102,7 @@
 /*
  * PLL1 multiplier value (1..256)
  */
-#define CONFIG_LPC18XX_PLL1_M		17	/* 12 MHz * 17 = 204 MHz */
+#define CONFIG_LPC18XX_PLL1_M		14	/* 12 MHz * 17 = 204 MHz */
 
 /*
  * Number of clock ticks in 1 sec

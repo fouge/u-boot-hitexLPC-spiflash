@@ -168,6 +168,7 @@ COBJS-$(CONFIG_USB_KEYBOARD) += usb_kbd.o
 
 #users defined 
 COBJS-y += cmd_spifi.o
+COBJS-y += spifi/main_spifi.o
 
 COBJS	:= $(sort $(COBJS-y))
 SRCS	:= $(AOBJS:.o=.S) $(COBJS:.o=.c)

@@ -45,8 +45,7 @@
 #include "lpc_types.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Private Macros -------------------------------------------------------------- */
