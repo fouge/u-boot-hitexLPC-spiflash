@@ -222,7 +222,6 @@ LIBS += drivers/pci/libpci.a
 LIBS += drivers/pcmcia/libpcmcia.a
 LIBS += drivers/power/libpower.a
 LIBS += drivers/spi/libspi.a
-LIBS += drivers/spifi_lpc/libspifi_drv_M4.a
 ifeq ($(CPU),mpc83xx)
 LIBS += drivers/qe/qe.a
 endif
@@ -254,6 +253,10 @@ LIBS := $(addprefix $(obj),$(LIBS))
 
 LIBBOARD = board/$(BOARDDIR)/lib$(BOARD).a
 LIBBOARD := $(addprefix $(obj),$(LIBBOARD))
+
+# External libraries
+EXT_LIBS = external_libs/libspifi_drv_M4.a
+
 
 # Add GCC lib
 ifdef USE_PRIVATE_LIBGCC
@@ -288,7 +291,8 @@ ONENAND_BIN ?= $(obj)onenand_ipl/onenand-ipl-2k.bin
 endif
 
 __OBJS := $(subst $(obj),,$(OBJS))
-__LIBS := $(subst $(obj),,$(LIBS)) $(subst $(obj),,$(LIBBOARD))
+# + User added libraries
+__LIBS := $(subst $(obj),,$(LIBS)) $(EXT_LIBS) $(subst $(obj),,$(LIBBOARD))
 
 #########################################################################
 #########################################################################
@@ -3849,8 +3853,8 @@ clean:
 	@rm -f $(TIMESTAMP_FILE) $(VERSION_FILE)
 	@find $(OBJTREE) -type f \
 		\( -name 'core' -o -name '*.bak' -o -name '*~' \
-		-o -name '*.o'	-o -name '*.a' -o -name '*.exe'	\) -print \
-		| xargs rm -f
+		-o -name '*.o' -o -name "*.a" -o -name '*.exe' \) -print \
+		| grep -v "external_libs" | xargs rm -f
 
 clobber:	clean
 	@find $(OBJTREE) -type f \( -name .depend \
