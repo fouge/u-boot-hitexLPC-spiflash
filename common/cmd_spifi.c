@@ -40,11 +40,18 @@ void pullMISO(int high) {
 
 int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-	unsigned int * statusRegisterSpifi = (unsigned int *)0x4000301C;
-	*statusRegisterSpifi |= (1<<4);
-	debug("Initializing SPIFI ..");
-	init_spifi();
-	debug(". OK\n");
+
+    pSpifi = &spifi_table;
+
+	/* Initialize SPIFI driver */
+	printf("Init SPIFI :\n");
+	if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, 12)) {
+		printf("fail");
+		while (1);
+	}
+	printf("FLASH manufacturer ID = 0x%x \n\r", obj.mfger);
+	printf("FLASH Device Type = 0x%x \n\r", obj.devType);
+	printf("FLASH Device ID = 0x%x \n\r", obj.devID);
 	return 1;
 }
 
