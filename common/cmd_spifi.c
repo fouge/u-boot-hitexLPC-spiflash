@@ -40,31 +40,9 @@ void pullMISO(int high) {
 
 int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-
-	LPC_CGU->BASE_SPIFI_CLK = 1<<24 | 1<<11; /* IRC 12 MHz is good enough for us */
-
-	/* set up SPIFI I/O (undocumented bit 7 set as 1, Aug 2 2011) */
-	LPC_SCU->SFSP3_3 = 0xF3; /* high drive for SCLK */
-	/* IO pins */
-	LPC_SCU->SFSP3_4=LPC_SCU->SFSP3_5=LPC_SCU->SFSP3_6=LPC_SCU->SFSP3_7 = 0xD3;
-	LPC_SCU->SFSP3_8 = 0x13; /* CS doesn't need feedback */
-
-	pSpifi = &spifi_table;
-
-	/* Reset */
-	unsigned int * statusRegister = (unsigned int *)0x4000301C;
-	unsigned int * controlRegister = (unsigned int *)0x40003000;
-	printf("avant : status register : 0x%x \n\r", *(statusRegister));
-	(*statusRegister) |= (1<<4);
-	printf("apres : status register : 0x%x \n\r", *(statusRegister));
-	printf("control register : 0x%x \n\r", *controlRegister);
-
-	debug("Initializing SPIFI driver..");
-	if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, 12)) {
-		debug(". failed.\n");
-		while (1);
-	}
-	debug(". OK! \n");
+	unsigned int * statusRegisterSpifi = (unsigned int *)0x4000301C;
+	*statusRegisterSpifi |= (1<<4);
+	init_spifi();
 	return 1;
 }
 
