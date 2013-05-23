@@ -42,7 +42,9 @@ int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	unsigned int * statusRegisterSpifi = (unsigned int *)0x4000301C;
 	*statusRegisterSpifi |= (1<<4);
+	debug("Initializing SPIFI ..");
 	init_spifi();
+	debug(". OK\n");
 	return 1;
 }
 

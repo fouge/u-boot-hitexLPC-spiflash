@@ -22,6 +22,9 @@ SECTIONS
         LONG(LOADADDR(.text));
         LONG(    ADDR(.text));
         LONG(  SIZEOF(.text));
+        LONG(LOADADDR(.constdata));
+        LONG(    ADDR(.constdata));
+        LONG(  SIZEOF(.constdata));
         LONG(LOADADDR(.u_boot_cmd));
         LONG(    ADDR(.u_boot_cmd));
         LONG(  SIZEOF(.u_boot_cmd));
