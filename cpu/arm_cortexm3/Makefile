@@ -30,7 +30,7 @@ include $(TOPDIR)/config.mk
 LIB	= $(obj)lib$(CPU).a
 
 START	:= start.o
-COBJS	:= cpu.o cmd_cptf.o timer.o
+COBJS	:= cpu.o timer.o # cmd_cptf.o not necessary for LPC43
 
 SRCS	:= $(START:.o=.c) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS))

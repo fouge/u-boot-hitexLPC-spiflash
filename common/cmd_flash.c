@@ -44,6 +44,14 @@ int find_dev_and_part(const char *id, struct mtd_device **dev,
 #ifndef CONFIG_SYS_NO_FLASH
 extern flash_info_t flash_info[];	/* info for FLASH chips */
 
+#ifdef CONFIG_LPC_SPIFI
+#include <asm/arch/spifi_rom_api.h>
+
+extern SPIFIobj obj;
+extern SPIFI_RTNS * pSpifi;
+extern SPIFIopers opers;
+#endif
+
 /*
  * The user interface starts numbering for Flash banks with 1
  * for historical reasons.
@@ -287,6 +295,24 @@ flash_fill_sect_ranges (ulong addr_first, ulong addr_last,
 }
 #endif /* CONFIG_SYS_NO_FLASH */
 
+
+/*
+ * Print SPI Flash info
+ */
+#ifdef CONFIG_LPC_SPIFI
+int spifi_print_info(void){
+	int i = 0;
+	printf("\nBank  # %ld SPIFI: ", CONFIG_SYS_MAX_FLASH_BANKS);
+	printf(" Size : %ld MB\n", obj.devSize>>20);
+	printf("SPIFI Driver used. ");
+	printf("Manufacturer ID: 0x%x, ", obj.mfger);
+	printf("Device ID: 0x%x\n", obj.devID);
+	printf("Base : 0x%x\n", obj.base);
+
+}
+#endif
+
+
 int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 #ifndef CONFIG_SYS_NO_FLASH
@@ -301,21 +327,38 @@ int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	if (argc == 1) {	/* print info for all FLASH banks */
 		for (bank=0; bank <CONFIG_SYS_MAX_FLASH_BANKS; ++bank) {
 			printf ("\nBank # %ld: ", bank+1);
-
 			flash_print_info (&flash_info[bank]);
 		}
+		#ifdef CONFIG_LPC_SPIFI
+			spifi_print_info();
+		#endif
+
 		return 0;
 	}
 
 	bank = simple_strtoul(argv[1], NULL, 16);
-	if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS)) {
+	if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS+1)) {
 		printf ("Only FLASH Banks # 1 ... # %d supported\n",
-			CONFIG_SYS_MAX_FLASH_BANKS);
+			CONFIG_SYS_MAX_FLASH_BANKS+1);
 		return 1;
 	}
+
+#ifdef CONFIG_LPC_SPIFI
+	/* Bank SPIFI */
+	if(bank==CONFIG_SYS_MAX_FLASH_BANKS+1){
+		spifi_print_info();
+	}
+	else{
+#endif
+
 	printf ("\nBank # %ld: ", bank);
 	flash_print_info (&flash_info[bank-1]);
+
+#ifdef CONFIG_LPC_SPIFI
+	}
+#endif
 #endif /* CONFIG_SYS_NO_FLASH */
+
 	return 0;
 }
 

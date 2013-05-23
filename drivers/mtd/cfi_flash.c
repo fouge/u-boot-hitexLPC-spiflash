@@ -2084,7 +2084,6 @@ unsigned long flash_init (void)
 		debug("SPI FLASH manufacturer ID = 0x%x \n\r", obj.mfger);
 		debug("SPI FLASH Device Type = 0x%x \n\r", obj.devType);
 		debug("SPI FLASH Device ID = 0x%x \n\r", obj.devID);
-
 		printf("SPIFI size : ");
 		print_size (obj.memSize, "\n");
 

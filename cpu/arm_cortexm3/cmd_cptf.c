@@ -128,8 +128,10 @@ int do_cptf(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	return ret;
 }
 
+
 U_BOOT_CMD(
 	cptf,	5,		0,	do_cptf,
 	"copy memory buffer to internal Flash of Cortex-M3",
 	"dst [[src] [[size] [do_reset]]]"
 );
+

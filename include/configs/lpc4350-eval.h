@@ -37,13 +37,14 @@
 /*
  * Disable debug messages
  */
-// #undef DEBUG
+#undef DEBUG
 
 
 
 /*
  * Boot in SPIFI
  * Library SPIFI (see external_libs/)
+ * Warning : U-Boot configured to have just 1 SPI Flash bank
  */
 #define CONFIG_LPC_SPIFI
 
@@ -182,6 +183,7 @@
 
 #define CONFIG_SYS_FLASH_BANK1_BASE		0x1C000000 /* CS0 */
 
+
 #define CONFIG_SYS_FLASH_CFI				1
 #define CONFIG_FLASH_CFI_DRIVER				1
 #define CONFIG_FLASH_CFI_LEGACY				1
@@ -192,17 +194,10 @@
 #define CONFIG_SYS_MAX_FLASH_BANKS			1
 #define CONFIG_SYS_MAX_FLASH_SECT			1024
 
-
-
-/*
- * Use SPI Flash
- */
-/*
-#define CONFIG_SPI_FLASH
-#define CONFIG_SPI_FLASH_SPANSION
-#define CONFIG_SOFT_SPI
-*/
-
+#ifdef CONFIG_LPC_SPIFI
+#define CONFIG_SYS_FLASH_BANK1_SPIFI_BASE		0x1C000000 /* SPIFI bank 1 */
+#define CONFIG_SYS_FLASH_SPIFI_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_SPIFI_BASE }
+#endif
 /*
  * Store env in flash.
  */
@@ -216,8 +211,14 @@
 #endif
 
 #define CONFIG_ENV_SIZE			(4 * 1024)
+#ifdef CONFIG_LPC_SPIFI
+#define CONFIG_ENV_ADDR \
+	(CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + 128 * 1024)
+#else
 #define CONFIG_ENV_ADDR \
 	(CONFIG_SYS_FLASH_BANK1_BASE + 128 * 1024)
+#endif
+
 #define CONFIG_INFERNO			1
 #define CONFIG_ENV_OVERWRITE		1
 
