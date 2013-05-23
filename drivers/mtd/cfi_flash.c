@@ -41,6 +41,16 @@
 #include <environment.h>
 #include <mtd/cfi_flash.h>
 
+#ifdef CONFIG_LPC_SPIFI
+#include <asm/arch/lpc43xx_cgu.h>
+#include <asm/arch/spifi_rom_api.h>
+#include <asm/arch/lpc43xx_scu.h>
+
+SPIFIobj obj;
+SPIFI_RTNS * pSpifi;
+SPIFIopers opers;
+#endif
+
 /*
  * This file implements a Common Flash Interface (CFI) driver for
  * U-Boot.
@@ -126,6 +136,30 @@ static u64 __flash_read64(void *addr)
 	/* No architectures currently implement __raw_readq() */
 	return *(volatile u64 *)addr;
 }
+
+
+/*
+ * needed for SPIFI library from LPCware
+ */
+#ifdef CONFIG_LPC_SPIFI
+void __aeabi_memcpy4(void *dest, const void *src, unsigned int n)
+{
+	unsigned char * s = (unsigned char *)src;
+	unsigned char * d = (unsigned char *)dest;
+
+	while (n--) *d++ = *s++;
+}
+
+
+/* hardware-control routine used by spifi_rom_api */
+void pullMISO(int high) {
+    /* undocumented bit 7 included as 1, Aug 2 2011 */
+	LPC_SCU->SFSP3_6 = high == 0 ? 0xDB	 /* pull down */
+					 : high == 1 ? 0xC3  /* pull up */
+					             : 0xD3; /* neither */
+}
+#endif
+
 
 #ifdef CONFIG_CFI_FLASH_USE_WEAK_ACCESSORS
 void flash_write8(u8 value, void *addr)__attribute__((weak, alias("__flash_write8")));
@@ -1931,8 +1965,10 @@ unsigned long flash_init (void)
 
 #define BANK_BASE(i)	(((phys_addr_t [CFI_MAX_FLASH_BANKS])CONFIG_SYS_FLASH_BANKS_LIST)[i])
 
-	/* Init: no FLASHes known */
-	for (i = 0; i < CONFIG_SYS_MAX_FLASH_BANKS-1; ++i) {
+	/* Init: no FLASHes known
+	 * Loop used to detect parallel flash
+	 */
+	for (i = 0; i < CONFIG_SYS_MAX_FLASH_BANKS; ++i) {
 		flash_info[i].flash_id = FLASH_UNKNOWN;
 
 		if (!flash_detect_legacy (BANK_BASE(i), i))
@@ -2034,6 +2070,25 @@ unsigned long flash_init (void)
 
 #ifdef CONFIG_FLASH_CFI_MTD
 	cfi_mtd_init();
+#endif
+
+
+#ifdef CONFIG_LPC_SPIFI
+		pSpifi = &spifi_table;
+
+		/* Initialize SPIFI driver */
+		printf("Initializing SPIFI...\n");
+		if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, 12)) {
+			printf("failed\n");
+		}
+		debug("SPI FLASH manufacturer ID = 0x%x \n\r", obj.mfger);
+		debug("SPI FLASH Device Type = 0x%x \n\r", obj.devType);
+		debug("SPI FLASH Device ID = 0x%x \n\r", obj.devID);
+
+		printf("SPIFI size : ");
+		print_size (obj.memSize, "\n");
+
+		size += obj.memSize;
 #endif
 
 	return (size);

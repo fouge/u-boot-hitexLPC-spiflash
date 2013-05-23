@@ -9,7 +9,6 @@
 
 #include <common.h>
 #include <command.h>
-// #include <asm/arch/lpc43xx_libcfg.h>
 #include <asm/arch/lpc43xx_cgu.h>
 #include <asm/arch/spifi_rom_api.h>
 #include <asm/arch/lpc43xx_scu.h>
@@ -18,25 +17,10 @@
 /* init_spifi : init spifi using library (see lpcware.com) */
 /*******************************************************************/
 
-SPIFIobj obj;
-SPIFI_RTNS * pSpifi;
-SPIFIopers opers;
+extern SPIFIobj obj;
+extern SPIFI_RTNS * pSpifi;
+extern SPIFIopers opers;
 
-void __aeabi_memcpy4(void *dest, const void *src, unsigned int n)
-{
-unsigned char * s = (unsigned char *)src;
-unsigned char * d = (unsigned char *)dest;
-
-while (n--) *d++ = *s++;
-}
-
-/* hardware-control routine used by spifi_rom_api */
-void pullMISO(int high) {
-    /* undocumented bit 7 included as 1, Aug 2 2011 */
-	LPC_SCU->SFSP3_6 = high == 0 ? 0xDB	 /* pull down */
-					 : high == 1 ? 0xC3  /* pull up */
-					             : 0xD3; /* neither */
-}
 
 int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {

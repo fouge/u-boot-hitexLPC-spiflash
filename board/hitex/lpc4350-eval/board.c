@@ -658,10 +658,6 @@ int board_init(void)
 	 */
 	iomux_init();
 
-#ifdef CONFIG_LPC43_SPIFI
-
-#endif
-
 
 #ifdef CONFIG_SYS_FLASH_CS
 	/* Set timing for flash */

@@ -185,7 +185,7 @@ static int display_dram_config (void)
 #ifndef CONFIG_SYS_NO_FLASH
 static void display_flash_config (ulong size)
 {
-	puts ("Flash: ");
+	puts ("Total Flash : ");
 	print_size (size, "\n");
 }
 #endif /* CONFIG_SYS_NO_FLASH */

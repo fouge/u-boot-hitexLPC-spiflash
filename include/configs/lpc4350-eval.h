@@ -42,9 +42,10 @@
 
 
 /*
- * Boot in SPIFI only (no shadowing)
+ * Boot in SPIFI
+ * Library SPIFI (see external_libs/)
  */
-#define CONFIG_LPC43_SPIFI
+#define CONFIG_LPC_SPIFI
 
 /*
  * This is an ARM Cortex-M4 CPU core. Also use the common Cortex-M3 code.
@@ -164,7 +165,7 @@
 #define CONFIG_LPC18XX_EMC_HALFCPU
 
 /*
- * Configuration of the external Flash memory (NOR and SPIFI)
+ * Configuration of the external Flash memory (NOR only, not SPIFI)
  */
 /* Define this to enable NOR Flash support */
 #define CONFIG_SYS_FLASH_CS		0
@@ -179,19 +180,16 @@
 #define CONFIG_SYS_FLASH_WR		0x1f		/* Maximum */
 #define CONFIG_SYS_FLASH_TA		0x0f		/* Maximum */
 
-
-
 #define CONFIG_SYS_FLASH_BANK1_BASE		0x1C000000 /* CS0 */
-#define CONFIG_SYS_FLASH_BANK2_BASE		0x14000000	/* SPIFI */
 
 #define CONFIG_SYS_FLASH_CFI				1
 #define CONFIG_FLASH_CFI_DRIVER				1
 #define CONFIG_FLASH_CFI_LEGACY				1
 #define CONFIG_SYS_FLASH_LEGACY_2Mx16		1
 
-/* #define CONFIG_SYS_FLASH_CFI_WIDTH			FLASH_CFI_16BIT */
-#define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE , CONFIG_SYS_FLASH_BANK2_BASE }
-#define CONFIG_SYS_MAX_FLASH_BANKS			2
+#define CONFIG_SYS_FLASH_CFI_WIDTH			FLASH_CFI_16BIT
+#define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE }
+#define CONFIG_SYS_MAX_FLASH_BANKS			1
 #define CONFIG_SYS_MAX_FLASH_SECT			1024
 
 
