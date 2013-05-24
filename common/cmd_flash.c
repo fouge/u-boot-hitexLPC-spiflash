@@ -145,6 +145,41 @@ int flash_sect_roundb (ulong *addr)
 
 	/* find the end addr of the sector where the *addr is */
 	found = 0;
+#ifdef CONFIG_LPC_SPIFI
+	if(*addr > 0x14000000 && *addr < 0x18000000)
+	{
+		for(i=0; i< obj.devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
+			if(i == ( obj.devSize/SPI_FLASH_SECT_SIZE -1 ))
+				sector_end_addr = (0x14000000 + obj.devSize)-1;
+			else
+				sector_end_addr = (0x14000000 + (i+1) * SPI_FLASH_SECT_SIZE) - 1;
+
+			if((*addr <= sector_end_addr) && (*addr >= (0x14000000 + i * SPI_FLASH_SECT_SIZE)) ){
+				found = 1;
+				/* adjust *addr if necessary */
+				if (*addr < sector_end_addr)
+					*addr = sector_end_addr;
+			}
+		}
+	}
+	else if(*addr > 0x80000000 && *addr < 0x88000000){
+		for(i=0; i< obj.devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
+			if(i == ( obj.devSize/SPI_FLASH_SECT_SIZE -1 ))
+				sector_end_addr = (0x80000000 + obj.devSize)-1;
+			else
+				sector_end_addr = (0x80000000 + (i+1) * SPI_FLASH_SECT_SIZE) - 1;
+
+			if((*addr <= sector_end_addr) && (*addr >= (0x80000000 + i * SPI_FLASH_SECT_SIZE)) ){
+				found = 1;
+				/* adjust *addr if necessary */
+				if (*addr < sector_end_addr)
+					*addr = sector_end_addr;
+			}
+		}
+	}
+
+#endif
+
 	for (bank = 0; bank < CONFIG_SYS_MAX_FLASH_BANKS && !found; ++bank) {
 		info = &flash_info[bank];
 		for (i = 0; i < info->sector_count && !found; ++i) {
@@ -423,12 +458,15 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				printf(". failed ! \n");
 			else
 				printf(". done.\n");
-
 #endif
 		}
 		return rcode;
 	}
 
+	/*
+	 * > erase B:SF[-SL]
+	 * not documented
+	 */
 	if ((n = abbrev_spec(argv[1], &info, &sect_first, &sect_last)) != 0) {
 		if (n < 0) {
 			puts ("Bad sector specification\n");
@@ -528,6 +566,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 
 	/*
+	 * >erase start +len <=> >erase start end after addr_spec()
 	 * >erase start end
 	 */
 	#ifdef CONFIG_LPC_SPIFI
@@ -535,7 +574,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	unsigned int ret = 0;
 	/* If erase SPI flash sectors */
 	if((addr_first>=0x14000000 && addr_last<0x18000000) || (addr_first>=0x80000000 && addr_last<0x88000000)){
-		printf("Erase SPIFI sector(s) :\n");
+		printf("Erase SPI Flash sector(s) :\n");
 		if(addr_first>=0x14000000 && addr_last<(0x14000000 + obj.devSize)){
 			addr_first += 0x6C000000;
 			addr_last += 0x6C000000;
@@ -886,12 +925,17 @@ U_BOOT_CMD(
 );
 
 U_BOOT_CMD(
-	erase,   3,   0,  do_flerase,
-	"erase FLASH memory",
-	"start end\n"
-	"erase bank N\n    - erase FLASH bank # N\n"
-	TMP_ERASE
-	"erase all\n    - erase all FLASH banks"
+		erase,   3,   0,  do_flerase,
+			"erase FLASH memory",
+			"start end\n"
+			"    - erase FLASH from addr 'start' to addr 'end'\n"
+			"erase start +len\n"
+			"    - erase FLASH from addr 'start' to the end of sect "
+			"w/addr 'start'+'len'-1\n"
+			/* "erase N:SF[-SL]\n    - erase sectors SF-SL in FLASH bank # N\n" */
+			"erase bank N\n    - erase FLASH bank # N\n"
+			TMP_ERASE
+			"erase all\n    - erase all FLASH banks"
 );
 
 U_BOOT_CMD(
