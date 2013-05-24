@@ -45,6 +45,16 @@
 
 static int mod_mem(cmd_tbl_t *, int, int, int, char *[]);
 
+
+#ifdef CONFIG_LPC_SPIFI
+#include <asm/arch/spifi_rom_api.h>
+
+extern SPIFIobj obj;
+extern SPIFI_RTNS * pSpifi;
+extern SPIFIopers opers;
+#endif
+
+
 /* Display values from last command.
  * Memory modify remembered values are different from display memory.
  */
@@ -402,7 +412,7 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		puts ("done\n");
 		return 0;
 	}
-#endif
+#endif /* end ifndef CONFIG_SYS_NO_FLASH */
 
 #ifdef CONFIG_HAS_DATAFLASH
 	/* Check if we are copying from RAM or Flash to DataFlash */
@@ -440,13 +450,44 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		puts ("Unsupported combination of source/destination.\n\r");
 		return 1;
 	}
-#endif
+#endif /* END CONFIG_HAS_DATAFLASH */
 
 #ifdef CONFIG_BLACKFIN
 	/* See if we're copying to/from L1 inst */
 	if (addr_bfin_on_chip_mem(dest) || addr_bfin_on_chip_mem(addr)) {
 		memcpy((void *)dest, (void *)addr, count * size);
 		return 0;
+	}
+#endif
+
+#ifdef CONFIG_LPC_SPIFI
+	unsigned int ret;
+
+	if((((dest + count*size) < 0x18000000) && dest >= 0x14000000 ) || (dest > 0x8000000 && ((dest + count*size) < 0x88000000))){
+		printf("Copy to SPI Flash ..");
+		/*
+		 * dest must be > 0x80000000 to program flash with lib
+		 */
+		if(dest < 0x18000000)
+			dest += 0x6C000000;
+
+		opers.length = count*size;
+		opers.scratch = NULL;
+		opers.protect = 0;
+		opers.options = S_CALLER_ERASE;
+	    opers.dest = (char *)dest;
+		ret = pSpifi->spifi_program(&obj, (char *)addr, &opers);
+		if(ret==0x2000B){
+		printf(". failed! \nSomething went wrong : dest memory has to be erased \n Error code : 0x%x \n", ret, ret);
+			return 0;
+		}
+		else if(ret){
+				printf(". failed! Something went wrong : error unknown \n error code : 0x%x , %d \n", ret, ret);
+				return 0;
+		}
+		else
+			printf(". done\n");
+	    	return 0;
 	}
 #endif
 
@@ -1278,13 +1319,13 @@ U_BOOT_CMD(
 U_BOOT_CMD(
 	cp,	4,	1,	do_mem_cp,
 	"memory copy",
-	"[.b, .w, .l] source target count"
+	"[.b, .w, .l] source target count\ncount: number of [b, w, l]\ndefault .l : 4 bytes"
 );
 
 U_BOOT_CMD(
 	cmp,	4,	1,	do_mem_cmp,
 	"memory compare",
-	"[.b, .w, .l] addr1 addr2 count"
+	"[.b, .w, .l] addr1 addr2 count\ncount: number of [b, w, l]"
 );
 
 #ifndef CONFIG_CRC32_VERIFY
