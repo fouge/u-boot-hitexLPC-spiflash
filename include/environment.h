@@ -52,7 +52,7 @@
 #   define CONFIG_ENV_SECT_SIZE	CONFIG_ENV_SIZE
 #  endif
 #  ifndef  CONFIG_ENV_SIZE
-#   define CONFIG_ENV_SIZE	CONFIG_ENV_SECT_SIZE
+#   define CONFIG_ENV_SIZE		CONFIG_ENV_SECT_SIZE
 #  endif
 # else
 #  error "Both CONFIG_ENV_SECT_SIZE and CONFIG_ENV_SIZE undefined"

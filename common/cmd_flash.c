@@ -55,7 +55,28 @@ extern SPIFIopers opers;
 /*
  * The user interface starts numbering for Flash banks with 1
  * for historical reasons.
+ *
+ * Update 2013-05-24
+ * SPI Flash is the last number on this ROM (this ROM allows 1 SPI Flash
+ * device, using LPC SPIFI driver )
  */
+
+#ifdef CONFIG_LPC_SPIFI
+/*
+ * This routine erase a number of sectors (nSect) starting at address (start_addr)
+ */
+int32_t erase_lpc_spi_flash(char* start_addr, uint32_t nSect, char* scratch, uint32_t options){
+	opers.dest = start_addr;
+	opers.length = nSect;
+  	opers.scratch = scratch;
+  	opers.options = options;
+	return pSpifi->spifi_erase(&obj, &opers);
+}
+#endif
+
+
+
+
 
 /*
  * this routine looks for an abbreviated flash range specification.
@@ -337,20 +358,25 @@ int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 
 	bank = simple_strtoul(argv[1], NULL, 16);
+
+#ifdef CONFIG_LPC_SPIFI
 	if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS+1)) {
-		printf ("Only FLASH Banks # 1 ... # %d supported\n",
+		printf ("Only FLASH Banks # 1 ... # %d supported, last is SPI Flash\n",
 			CONFIG_SYS_MAX_FLASH_BANKS+1);
 		return 1;
 	}
 
-#ifdef CONFIG_LPC_SPIFI
 	/* Bank SPIFI */
 	if(bank==CONFIG_SYS_MAX_FLASH_BANKS+1){
 		spifi_print_info();
 	}
 	else{
 #endif
-
+	if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS)) {
+		printf ("Only FLASH Banks # 1 ... # %d supported\n",
+			CONFIG_SYS_MAX_FLASH_BANKS);
+		return 1;
+	}
 	printf ("\nBank # %ld: ", bank);
 	flash_print_info (&flash_info[bank-1]);
 
@@ -380,11 +406,25 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
+	/*
+	 * > erase all
+	 * At this point argc >= 2
+	 */
 	if (strcmp(argv[1], "all") == 0) {
 		for (bank=1; bank<=CONFIG_SYS_MAX_FLASH_BANKS; ++bank) {
 			printf ("Erase Flash Bank # %ld ", bank);
 			info = &flash_info[bank-1];
 			rcode = flash_erase (info, 0, info->sector_count-1);
+
+#ifdef CONFIG_LPC_SPIFI
+			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
+				/* Erase Device */
+			if(erase_lpc_spi_flash((char *)(obj.base),obj.memSize/SPI_FLASH_SECT_SIZE, NULL , S_VERIFY_ERASE))
+				printf(". failed ! \n");
+			else
+				printf(". done.\n");
+
+#endif
 		}
 		return rcode;
 	}
@@ -426,23 +466,56 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 #endif
 
+	/*
+	 * At this point argc = 3
+	 */
 	if (argc != 3) {
 		cmd_usage(cmdtp);
 		return 1;
 	}
 
+	/*
+	 * >erase bank N
+	 */
 	if (strcmp(argv[1], "bank") == 0) {
 		bank = simple_strtoul(argv[2], NULL, 16);
+#ifdef CONFIG_LPC_SPIFI
+		if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS+1)) {
+			printf ("Only FLASH Banks # 1 ... # %d supported, last is SPI Flash\n",
+				CONFIG_SYS_MAX_FLASH_BANKS+1);
+			return 1;
+		}
+		/* If SPI Flash */
+		if(bank==CONFIG_SYS_MAX_FLASH_BANKS+1){
+			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
+				/* Erase Device */
+			int ret = erase_lpc_spi_flash((char *)(obj.base),obj.memSize/SPI_FLASH_SECT_SIZE, NULL , S_VERIFY_ERASE);
+			if(ret)
+				printf(".failed. Return : %d\n", ret);
+			else
+				printf(". done.\n");
+		}
+		else{
+		printf ("Erase Flash Bank # %ld ", bank);
+		info = &flash_info[bank-1];
+		rcode = flash_erase (info, 0, info->sector_count-1);
+		}
+		return rcode;
+#else
 		if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS)) {
 			printf ("Only FLASH Banks # 1 ... # %d supported\n",
 				CONFIG_SYS_MAX_FLASH_BANKS);
 			return 1;
 		}
+
 		printf ("Erase Flash Bank # %ld ", bank);
 		info = &flash_info[bank-1];
 		rcode = flash_erase (info, 0, info->sector_count-1);
 		return rcode;
+#endif
+
 	}
+
 
 	if (addr_spec(argv[1], argv[2], &addr_first, &addr_last) < 0){
 		printf ("Bad address format\n");
@@ -454,8 +527,50 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
+	/*
+	 * >erase start end
+	 */
+	#ifdef CONFIG_LPC_SPIFI
+	unsigned int i;
+	unsigned int ret = 0;
+	/* If erase SPI flash sectors */
+	if((addr_first>=0x14000000 && addr_last<0x18000000) || (addr_first>=0x80000000 && addr_last<0x88000000)){
+		printf("Erase SPIFI sector(s) :\n");
+		if(addr_first>=0x14000000 && addr_last<(0x14000000 + obj.devSize)){
+			addr_first += 0x6C000000;
+			addr_last += 0x6C000000;
+		}
+		if (addr_first>=0x80000000 && addr_last<(0x80000000 + obj.devSize)){
+			if(addr_first%SPI_FLASH_SECT_SIZE==0){
+				for(i=1; i <= ((obj.devSize - (addr_first - 0x80000000))  / SPI_FLASH_SECT_SIZE); i++){
+					if(addr_last == ((addr_first + i*SPI_FLASH_SECT_SIZE)-1)){
+						printf("\tStart address : 0x%x\tEnd Address : 0x%x \n", addr_first, addr_last);
+						ret = erase_lpc_spi_flash(addr_first, i, NULL, S_VERIFY_ERASE);
+						if(!ret)
+							printf("\tErased %d sector(s).\n", i);
+						else
+							printf("\tErasing failed : return %d\n", ret);
+						return 0;
+					}
+				}
+					printf("\tError: end address not on sector boundary, must be the last address of one sector.\n\tSector size is 0x%x\n", SPI_FLASH_SECT_SIZE);
+			}
+			else
+				printf("\tError: start address not on sector boundary, must be the first address of one sector.\n\tSector size is 0x%x\n", SPI_FLASH_SECT_SIZE);
+		}
+		else
+			printf("\tEnd address too high (and maybe start address too!). SPI Flash device is 0x%x long.\n", obj.devSize);
+	} /* END: erase SPI flash sectors */
+	/* Parallel Flash sectors */
+	else
+		rcode = flash_sect_erase(addr_first, addr_last);
+
+	return rcode;
+	#else
 	rcode = flash_sect_erase(addr_first, addr_last);
 	return rcode;
+	#endif
+
 #else
 	return 0;
 #endif /* CONFIG_SYS_NO_FLASH */
@@ -580,6 +695,16 @@ int do_protect (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			if (!rcode) puts (" done\n");
 #endif	/* CONFIG_SYS_FLASH_PROTECTION */
 		}
+
+#ifdef CONFIG_LPC_SPIFI
+			printf ("%sProtect SPI Flash Bank # %ld\n",
+				p ? "" : "Un-", CONFIG_SYS_MAX_FLASH_BANKS+1);
+			/*
+			 * TODO !! PROTECT
+			 */
+			printf ("!! Not implemented yet !!\n");
+#endif
+
 		return rcode;
 	}
 
@@ -764,11 +889,6 @@ U_BOOT_CMD(
 	erase,   3,   0,  do_flerase,
 	"erase FLASH memory",
 	"start end\n"
-	"    - erase FLASH from addr 'start' to addr 'end'\n"
-	"erase start +len\n"
-	"    - erase FLASH from addr 'start' to the end of sect "
-	"w/addr 'start'+'len'-1\n"
-	"erase N:SF[-SL]\n    - erase sectors SF-SL in FLASH bank # N\n"
 	"erase bank N\n    - erase FLASH bank # N\n"
 	TMP_ERASE
 	"erase all\n    - erase all FLASH banks"

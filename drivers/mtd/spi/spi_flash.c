@@ -14,6 +14,7 @@
 
 int spi_flash_cmd(struct spi_slave *spi, u8 cmd, void *response, size_t len)
 {
+
 	unsigned long flags = SPI_XFER_BEGIN;
 	int ret;
 

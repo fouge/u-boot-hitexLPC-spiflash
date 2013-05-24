@@ -189,7 +189,7 @@ typedef struct {
   void(*setSize)         (SPIFIobj *obj, int32_t value);
   int32_t (*setDev)          (SPIFIobj *obj, uint32_t opts, uint32_t mem_cmd, 
                           uint32_t prog_cmd);
-  uint32_t (*cmd)        (uc op, uc addrLen, uc intLen, uint16_t len);
+  uint32_t (*cmd)        (uc op, uc addrLen, uc intLen, uint16_t len); /* opcode, address, intermediate data, data*/
   uint32_t (*readAd)     (SPIFIobj *obj, uint32_t cmd, uint32_t addr);
   void (*send04)         (SPIFIobj *obj, uc op, uc len, uint32_t value);
   void (*wren_sendAd)    (SPIFIobj *obj, uint32_t cmd, uint32_t addr, uint32_t value);

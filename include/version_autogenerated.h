@@ -1,1 +1,1 @@
-#define U_BOOT_VERSION "U-Boot 2010.03-00000-gb6f81fe-dirty"
+#define U_BOOT_VERSION "U-Boot 2010.03-00000-gb3d2479-dirty"

@@ -45,6 +45,7 @@
  * Boot in SPIFI
  * Library SPIFI (see external_libs/)
  * Warning : U-Boot configured to have just 1 SPI Flash bank
+ * Warning : Do not define if there is no SPI Flash device used !
  */
 #define CONFIG_LPC_SPIFI
 
@@ -165,8 +166,11 @@
  */
 #define CONFIG_LPC18XX_EMC_HALFCPU
 
+
+
 /*
- * Configuration of the external Flash memory (NOR only, not SPIFI)
+ * Configuration of the external parallel Flash memory
+ * NOT Serial FLASH (Using LPC SPIFI driver)
  */
 /* Define this to enable NOR Flash support */
 #define CONFIG_SYS_FLASH_CS		0
@@ -181,8 +185,10 @@
 #define CONFIG_SYS_FLASH_WR		0x1f		/* Maximum */
 #define CONFIG_SYS_FLASH_TA		0x0f		/* Maximum */
 
+/*
+ * Define just parallel flash banks
+ */
 #define CONFIG_SYS_FLASH_BANK1_BASE		0x1C000000 /* CS0 */
-
 
 #define CONFIG_SYS_FLASH_CFI				1
 #define CONFIG_FLASH_CFI_DRIVER				1
@@ -190,13 +196,23 @@
 #define CONFIG_SYS_FLASH_LEGACY_2Mx16		1
 
 #define CONFIG_SYS_FLASH_CFI_WIDTH			FLASH_CFI_16BIT
+
+/* CONFIG_SYS_FLASH_BANKS_LIST	: list of all parallel Flash
+ *
+ * CONFIG_SYS_MAX_FLASH_BANKS : number of Flash banks
+ * SPI Flash not included : this ROM allow one SPIFI device which bank number
+ * is CONFIG_SYS_MAX_FLASH_BANKS + 1
+ */
 #define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE }
 #define CONFIG_SYS_MAX_FLASH_BANKS			1
 #define CONFIG_SYS_MAX_FLASH_SECT			1024
 
 #ifdef CONFIG_LPC_SPIFI
-#define CONFIG_SYS_FLASH_BANK1_SPIFI_BASE		0x1C000000 /* SPIFI bank 1 */
+#define CONFIG_SYS_FLASH_BANK1_SPIFI_BASE		0x14000000 /* SPIFI bank 1 */
 #define CONFIG_SYS_FLASH_SPIFI_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_SPIFI_BASE }
+#define SPI_FLASH_SECT_SIZE 	(64*1024) /* TODO : auto detect */
+//#define CONFIG_SPI_FLASH
+//#define CONFIG_SPI_FLASH_SPANSION
 #endif
 /*
  * Store env in flash.
@@ -212,8 +228,9 @@
 
 #define CONFIG_ENV_SIZE			(4 * 1024)
 #ifdef CONFIG_LPC_SPIFI
+#define CONFIG_ENV_OFFSET	(128 * 1024)
 #define CONFIG_ENV_ADDR \
-	(CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + 128 * 1024)
+	(CONFIG_SYS_FLASH_BANK1_BASE + CONFIG_ENV_OFFSET)
 #else
 #define CONFIG_ENV_ADDR \
 	(CONFIG_SYS_FLASH_BANK1_BASE + 128 * 1024)
@@ -341,9 +358,11 @@
 // #define CONFIG_CMD_SF /* Serial Flash commands */
 
 /*
- * To save memory disable long help
+ * >help command
+ * Explain how to use commands (syntax..)
+ * *** To save memory disable long help ***
  */
-#undef CONFIG_SYS_LONGHELP
+#define CONFIG_SYS_LONGHELP
 
 /*
  * Max number of command args

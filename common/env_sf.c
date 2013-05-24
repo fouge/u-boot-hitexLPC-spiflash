@@ -43,6 +43,10 @@
 # define CONFIG_ENV_SPI_MODE	SPI_MODE_3
 #endif
 
+#ifndef CONFIG_ENV_SECT_SIZE
+#define CONFIG_ENV_SECT_SIZE 64
+#endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 /* references to names in env_common.c */

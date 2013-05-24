@@ -24,7 +24,7 @@ extern SPIFIopers opers;
 
 int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-
+	int nsectors;
     pSpifi = &spifi_table;
 
 	/* Initialize SPIFI driver */
@@ -36,6 +36,9 @@ int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	printf("FLASH manufacturer ID = 0x%x \n\r", obj.mfger);
 	printf("FLASH Device Type = 0x%x \n\r", obj.devType);
 	printf("FLASH Device ID = 0x%x \n\r", obj.devID);
+
+	nsectors  = sizeof(	obj.protEnts) / sizeof(obj.protEnts)[1];
+
 	return 1;
 }
 
