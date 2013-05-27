@@ -216,7 +216,6 @@
 	#endif
 
 
-
 /*
  * *** IF environment variables in SPI flash (using LPC lib)
  * *******************************************************************
@@ -231,9 +230,9 @@
  * 	|	firmware	|
  * 	|				|
  * 	****************	-> 0x14020000
- * 	| env bank 1	|
+ * 	| env bank 1	|	old env
  * 	****************	-> 0x14020000 + n sector(s)
- * 	| env bank 2	|
+ * 	| env bank 2	|	newest
  * 	****************
  *
  *
@@ -259,9 +258,12 @@
 
 #ifdef CONFIG_LPC_SPIFI
 	#define CONFIG_ENV1_OFFSET	(SPI_FLASH_SECT_SIZE*2) /* !!! Must be start address of a sector, see SPI_FLASH_SECT_SIZE*/
-	#define CONFIG_ENV_ADDR (CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + CONFIG_ENV1_OFFSET)
+	#define CONFIG_ENV1_ADDR (CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + CONFIG_ENV1_OFFSET)
+
+	#define CONFIG_ENV2_OFFSET (CONFIG_ENV1_OFFSET+SPI_FLASH_SECT_SIZE)
+	#define CONFIG_ENV2_ADDR (CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + CONFIG_ENV2_OFFSET)
 #else
-	#define CONFIG_ENV_ADDR \
+	#define CONFIG_ENV1_ADDR \
 		(CONFIG_SYS_FLASH_BANK1_BASE + 128 * 1024)
 #endif
 

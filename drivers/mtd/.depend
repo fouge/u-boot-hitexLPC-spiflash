@@ -50,16 +50,7 @@ cfi_flash.o: cfi_flash.c \
  /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/memory.h \
  /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/environment.h \
  /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/mtd/cfi_flash.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/lpc43xx_cgu.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/lpc43xx.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/core_cm4.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/core_cmInstr.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/core_cmFunc.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/core_cm4_simd.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/system_LPC43xx.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/lpc_types.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/spifi_rom_api.h \
- /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/lpc43xx_scu.h
+ /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/asm/arch/spifi_rom_api.h
 jedec_flash.o: jedec_flash.c \
  /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/common.h \
  /home/cyril/Documents/U-Boot/u-boot-Hitex-SPIFI/include/config.h \

@@ -36,8 +36,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #if defined(CONFIG_CMD_SAVEENV) && defined(CONFIG_CMD_FLASH)
 #define CMD_SAVEENV
-#elif defined(CONFIG_ENV_ADDR_REDUND)
-#error Cannot use CONFIG_ENV_ADDR_REDUND without CONFIG_CMD_SAVEENV & CONFIG_CMD_FLASH
+#elif defined(CONFIG_ENV1_ADDR_REDUND)
+#error Cannot use CONFIG_ENV1_ADDR_REDUND without CONFIG_CMD_SAVEENV & CONFIG_CMD_FLASH
 #endif
 
 #if defined(CONFIG_ENV_SIZE_REDUND) && (CONFIG_ENV_SIZE_REDUND < CONFIG_ENV_SIZE)
@@ -45,8 +45,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #endif
 
 #ifdef CONFIG_INFERNO
-# ifdef CONFIG_ENV_ADDR_REDUND
-#error CONFIG_ENV_ADDR_REDUND is not implemented for CONFIG_INFERNO
+# ifdef CONFIG_ENV1_ADDR_REDUND
+#error CONFIG_ENV1_ADDR_REDUND is not implemented for CONFIG_INFERNO
 # endif
 #endif
 
@@ -59,28 +59,28 @@ env_t *env_ptr = (env_t *)(&environment[0]);
 
 #ifdef CMD_SAVEENV
 /* static env_t *flash_addr = (env_t *)(&environment[0]);-broken on ARM-wd-*/
-static env_t *flash_addr = (env_t *)CONFIG_ENV_ADDR;
+static env_t *flash_addr = (env_t *)CONFIG_ENV1_ADDR;
 #endif
 
 #else /* ! ENV_IS_EMBEDDED */
 
-env_t *env_ptr = (env_t *)CONFIG_ENV_ADDR;
+env_t *env_ptr = (env_t *)CONFIG_ENV1_ADDR;
 #ifdef CMD_SAVEENV
-static env_t *flash_addr = (env_t *)CONFIG_ENV_ADDR;
+static env_t *flash_addr = (env_t *)CONFIG_ENV1_ADDR;
 #endif
 
 #endif /* ENV_IS_EMBEDDED */
 
-#ifdef CONFIG_ENV_ADDR_REDUND
-static env_t *flash_addr_new = (env_t *)CONFIG_ENV_ADDR_REDUND;
+#ifdef CONFIG_ENV1_ADDR_REDUND
+static env_t *flash_addr_new = (env_t *)CONFIG_ENV1_ADDR_REDUND;
 
-/* CONFIG_ENV_ADDR is supposed to be on sector boundary */
-static ulong end_addr = CONFIG_ENV_ADDR + CONFIG_ENV_SECT_SIZE - 1;
-static ulong end_addr_new = CONFIG_ENV_ADDR_REDUND + CONFIG_ENV_SECT_SIZE - 1;
+/* CONFIG_ENV1_ADDR is supposed to be on sector boundary */
+static ulong end_addr = CONFIG_ENV1_ADDR + CONFIG_ENV_SECT_SIZE - 1;
+static ulong end_addr_new = CONFIG_ENV1_ADDR_REDUND + CONFIG_ENV_SECT_SIZE - 1;
 
 #define ACTIVE_FLAG   1
 #define OBSOLETE_FLAG 0
-#endif /* CONFIG_ENV_ADDR_REDUND */
+#endif /* CONFIG_ENV1_ADDR_REDUND */
 
 extern uchar default_environment[];
 
@@ -90,7 +90,7 @@ uchar env_get_char_spec (int index)
 	return ( *((uchar *)(gd->env_addr + index)) );
 }
 
-#ifdef CONFIG_ENV_ADDR_REDUND
+#ifdef CONFIG_ENV1_ADDR_REDUND
 
 int  env_init(void)
 {
@@ -241,7 +241,7 @@ Done:
 }
 #endif /* CMD_SAVEENV */
 
-#else /* ! CONFIG_ENV_ADDR_REDUND */
+#else /* ! CONFIG_ENV1_ADDR_REDUND */
 
 int  env_init(void)
 {
@@ -328,12 +328,12 @@ int saveenv(void)
 
 #endif /* CMD_SAVEENV */
 
-#endif /* CONFIG_ENV_ADDR_REDUND */
+#endif /* CONFIG_ENV1_ADDR_REDUND */
 
 void env_relocate_spec (void)
 {
-#if !defined(ENV_IS_EMBEDDED) || defined(CONFIG_ENV_ADDR_REDUND)
-#ifdef CONFIG_ENV_ADDR_REDUND
+#if !defined(ENV_IS_EMBEDDED) || defined(CONFIG_ENV1_ADDR_REDUND)
+#ifdef CONFIG_ENV1_ADDR_REDUND
 	if (gd->env_addr != (ulong)&(flash_addr->data)) {
 		env_t * etmp = flash_addr;
 		ulong ltmp = end_addr;
@@ -373,9 +373,9 @@ void env_relocate_spec (void)
 	if (gd->env_valid == 2)
 		puts ("*** Warning - some problems detected "
 		      "reading environment; recovered successfully\n\n");
-#endif /* CONFIG_ENV_ADDR_REDUND */
+#endif /* CONFIG_ENV1_ADDR_REDUND */
 #ifdef CMD_SAVEENV
 	memcpy (env_ptr, (void*)flash_addr, CONFIG_ENV_SIZE);
 #endif
-#endif /* ! ENV_IS_EMBEDDED || CONFIG_ENV_ADDR_REDUND */
+#endif /* ! ENV_IS_EMBEDDED || CONFIG_ENV1_ADDR_REDUND */
 }

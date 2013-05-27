@@ -198,7 +198,7 @@ int do_bdinfo(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 	print_lnum("memsize                ", bd->bi_memsize);
 	print_num("flashstart             ", bd->bi_flashstart);
 	print_num("CONFIG_SYS_MONITOR_BASE       ", CONFIG_SYS_MONITOR_BASE);
-	print_num("CONFIG_ENV_ADDR           ", CONFIG_ENV_ADDR);
+	print_num("CONFIG_ENV1_ADDR           ", CONFIG_ENV1_ADDR);
 	printf("CONFIG_SYS_RELOC_MONITOR_BASE = 0x%lx (%d)\n", CONFIG_SYS_RELOC_MONITOR_BASE,
 	       CONFIG_SYS_MONITOR_LEN);
 	printf("CONFIG_SYS_MALLOC_BASE        = 0x%lx (%d)\n", CONFIG_SYS_MALLOC_BASE,

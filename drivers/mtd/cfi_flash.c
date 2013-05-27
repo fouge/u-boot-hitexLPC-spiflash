@@ -42,13 +42,15 @@
 #include <mtd/cfi_flash.h>
 
 #ifdef CONFIG_LPC_SPIFI
-#include <asm/arch/lpc43xx_cgu.h>
+/*
+ * Normally, it's the only file that include spifi_rom_api.h besides spifi_lpc.h
+ * Use functions defined in drivers/mtd/spifi/spifi_lpc.c for any operation on SPIFI
+ */
 #include <asm/arch/spifi_rom_api.h>
-#include <asm/arch/lpc43xx_scu.h>
 
-SPIFIobj obj;
-SPIFI_RTNS * pSpifi;
-SPIFIopers opers;
+extern SPIFIobj obj;
+extern SPIFI_RTNS * pSpifi;
+extern SPIFIopers opers;
 #endif
 
 /*
@@ -138,29 +140,6 @@ static u64 __flash_read64(void *addr)
 }
 
 
-/*
- * needed for SPIFI library from LPCware
- */
-#ifdef CONFIG_LPC_SPIFI
-void __aeabi_memcpy4(void *dest, const void *src, unsigned int n)
-{
-	unsigned char * s = (unsigned char *)src;
-	unsigned char * d = (unsigned char *)dest;
-
-	while (n--) *d++ = *s++;
-}
-
-
-/* hardware-control routine used by spifi_rom_api */
-void pullMISO(int high) {
-    /* undocumented bit 7 included as 1, Aug 2 2011 */
-	LPC_SCU->SFSP3_6 = high == 0 ? 0xDB	 /* pull down */
-					 : high == 1 ? 0xC3  /* pull up */
-					             : 0xD3; /* neither */
-}
-#endif
-
-
 #ifdef CONFIG_CFI_FLASH_USE_WEAK_ACCESSORS
 void flash_write8(u8 value, void *addr)__attribute__((weak, alias("__flash_write8")));
 void flash_write16(u16 value, void *addr)__attribute__((weak, alias("__flash_write16")));
@@ -183,7 +162,7 @@ u64 flash_read64(void *addr)__attribute__((weak, alias("__flash_read64")));
 
 /*-----------------------------------------------------------------------
  */
-#if defined(CONFIG_ENV_IS_IN_FLASH) || defined(CONFIG_ENV_ADDR_REDUND) || (CONFIG_SYS_MONITOR_BASE >= CONFIG_SYS_FLASH_BASE)
+#if defined(CONFIG_ENV_IS_IN_FLASH) || defined(CONFIG_ENV1_ADDR_REDUND) || (CONFIG_SYS_MONITOR_BASE >= CONFIG_SYS_FLASH_BASE)
 flash_info_t *flash_get_info(ulong base)
 {
 	int i;
@@ -2044,17 +2023,17 @@ unsigned long flash_init (void)
 	/* Environment protection ON by default */
 #ifdef CONFIG_ENV_IS_IN_FLASH
 	flash_protect (FLAG_PROTECT_SET,
-		       CONFIG_ENV_ADDR,
-		       CONFIG_ENV_ADDR + CONFIG_ENV_SECT_SIZE - 1,
-		       flash_get_info(CONFIG_ENV_ADDR));
+		       CONFIG_ENV1_ADDR,
+		       CONFIG_ENV1_ADDR + CONFIG_ENV_SECT_SIZE - 1,
+		       flash_get_info(CONFIG_ENV1_ADDR));
 #endif
 
 	/* Redundant environment protection ON by default */
-#ifdef CONFIG_ENV_ADDR_REDUND
+#ifdef CONFIG_ENV1_ADDR_REDUND
 	flash_protect (FLAG_PROTECT_SET,
-		       CONFIG_ENV_ADDR_REDUND,
-		       CONFIG_ENV_ADDR_REDUND + CONFIG_ENV_SECT_SIZE - 1,
-		       flash_get_info(CONFIG_ENV_ADDR_REDUND));
+		       CONFIG_ENV1_ADDR_REDUND,
+		       CONFIG_ENV1_ADDR_REDUND + CONFIG_ENV_SECT_SIZE - 1,
+		       flash_get_info(CONFIG_ENV1_ADDR_REDUND));
 #endif
 
 #if defined(CONFIG_SYS_FLASH_AUTOPROTECT_LIST)
@@ -2074,8 +2053,6 @@ unsigned long flash_init (void)
 
 
 #ifdef CONFIG_LPC_SPIFI
-		pSpifi = &spifi_table;
-
 		/* Initialize SPIFI driver */
 		printf("Initializing SPIFI...\n");
 		if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, 12)) {

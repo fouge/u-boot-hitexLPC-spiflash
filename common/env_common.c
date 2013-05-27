@@ -31,11 +31,7 @@
 #include <malloc.h>
 
 #ifdef CONFIG_LPC_SPIFI
-#include <asm/arch/spifi_rom_api.h>
-
-extern SPIFIobj obj;
-extern SPIFI_RTNS * pSpifi;
-extern SPIFIopers opers;
+#include <spifi_lpc.h>
 #endif
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -52,7 +48,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define DEBUGF(fmt,args...)
 #endif
 
-extern env_t *env1_ptr;
+extern env_t *env_ptr;
 
 extern void env_relocate_spec (void);
 extern uchar env_get_char_spec(int);
@@ -149,7 +145,7 @@ uchar default_environment[] = {
 
 void env_crc_update (void)
 {
-	env1_ptr->crc = crc32(0, env1_ptr->data, ENV_SIZE);
+	env_ptr->crc = crc32(0, env_ptr->data, ENV_SIZE);
 }
 
 static uchar env_get_char_init (int index)
@@ -220,12 +216,12 @@ void set_default_env(void)
 		return;
 	}
 
-	memset(env1_ptr, 0, sizeof(env_t));
-	memcpy(env1_ptr->data, default_environment,
+	memset(env_ptr, 0, sizeof(env_t));
+	memcpy(env_ptr->data, default_environment,
 	       sizeof(default_environment));
 
 #ifdef CONFIG_SYS_REDUNDAND_ENVIRONMENT
-	env1_ptr->flags = 0xFF;
+	env_ptr->flags = 0xFF;
 #endif
 	env_crc_update ();
 	gd->env_valid = 1;
@@ -248,15 +244,15 @@ void env_relocate (void)
 	 * just relocate the environment pointer
 	 */
 #ifndef CONFIG_RELOC_FIXUP_WORKS
-	env1_ptr = (env_t *)((ulong)env1_ptr + gd->reloc_off);
+	env_ptr = (env_t *)((ulong)env_ptr + gd->reloc_off);
 #endif
-	DEBUGF ("%s[%d] embedded ENV at %p\n", __FUNCTION__,__LINE__,env1_ptr);
+	DEBUGF ("%s[%d] embedded ENV at %p\n", __FUNCTION__,__LINE__,env_ptr);
 #else
 	/*
 	 * We must allocate a buffer for the environment
 	 */
-	env1_ptr = (env_t *)malloc (CONFIG_ENV_SIZE);
-	DEBUGF ("%s[%d] malloced ENV at %p\n", __FUNCTION__,__LINE__,env1_ptr);
+	env_ptr = (env_t *)malloc (CONFIG_ENV_SIZE);
+	DEBUGF ("%s[%d] malloced ENV at %p\n", __FUNCTION__,__LINE__,env_ptr);
 #endif
 
 	if (gd->env_valid == 0)  /* Environment variables never saved in flash before */
@@ -264,15 +260,16 @@ void env_relocate (void)
 #if defined(CONFIG_GTH)	|| defined(CONFIG_ENV_IS_NOWHERE)	/* Environment not changable */
 		puts ("Using default environment\n\n");
 #else
-		puts ("*** Warning - bad CRC, using default environment\n\n");
+		debug("*** Warning - bad CRC, using default environment\n\n");
 		show_boot_progress (-60);
 #endif
 		set_default_env();
+
 	}
 	else {
 		env_relocate_spec ();
 	}
-	gd->env_addr = (ulong)&(env1_ptr->data);
+	gd->env_addr = (ulong)&(env_ptr->data);
 
 #ifdef CONFIG_AMIGAONEG3SE
 	disable_nvram();

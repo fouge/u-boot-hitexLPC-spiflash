@@ -47,11 +47,7 @@ static int mod_mem(cmd_tbl_t *, int, int, int, char *[]);
 
 
 #ifdef CONFIG_LPC_SPIFI
-#include <asm/arch/spifi_rom_api.h>
-
-extern SPIFIobj obj;
-extern SPIFI_RTNS * pSpifi;
-extern SPIFIopers opers;
+#include <spifi_lpc.h>
 #endif
 
 
@@ -471,18 +467,14 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		if(dest < 0x18000000)
 			dest += 0x6C000000;
 
-		opers.length = count*size;
-		opers.scratch = NULL;
-		opers.protect = 0;
-		opers.options = S_CALLER_ERASE;
-	    opers.dest = (char *)dest;
-		ret = pSpifi->spifi_program(&obj, (char *)addr, &opers);
+		ret = spifi_lpc_program(dest, addr, count*size, 0, S_CALLER_ERASE);
+
 		if(ret==0x2000B){
-		printf(". failed! \nSomething went wrong : dest memory has to be erased \n Error code : 0x%x \n", ret, ret);
+		printf(". failed! \nSomething went wrong : dest memory has to be erased \n Error code : 0x%x \n", ret);
 			return 0;
 		}
 		else if(ret){
-				printf(". failed! Something went wrong : error unknown \n error code : 0x%x , %d \n", ret, ret);
+				printf(". failed! Something went wrong : error unknown \n error code : 0x%x \n", ret);
 				return 0;
 		}
 		else

@@ -30,11 +30,7 @@
 #include <malloc.h>
 
 #ifdef CONFIG_LPC_SPIFI
-#include "asm/arch/spifi_rom_api.h"
-
-extern SPIFIobj obj;
-extern SPIFI_RTNS * pSpifi;
-extern SPIFIopers opers;
+#include <spifi_lpc.h>
 #else
 #include <spi_flash.h>
 #endif
@@ -69,39 +65,44 @@ extern uchar default_environment[];
 
 char * env_name_spec = "SPI Flash";
 #ifdef CONFIG_LPC_SPIFI
-env_t *env1_ptr = (env_t *)CONFIG_ENV_ADDR;
-static env_t *flash_addr = (env_t *)CONFIG_ENV_ADDR;
+env_t *env_ptr;
+env_t *env1_ptr = (env_t *)CONFIG_ENV1_ADDR;
+env_t *env2_ptr = (env_t *)CONFIG_ENV2_ADDR;
 #else
-env_t *env1_ptr ;
+env_t *env_ptr ;
 static struct spi_flash *env_flash;
 #endif
 
 
 #ifdef CONFIG_LPC_SPIFI
 
-/* two environment variables banks */
-int update_env_1(env_t env1){
-
-}
-
 int saveenv(void){
-	/* Unprotect
-	 * TODO : Protection
+
+	char buffer[CONFIG_ENV_SIZE];
+	char * env2 = (char*)CONFIG_ENV2_ADDR;
+	/*
+	 * TODO
 	 */
+	int i;
+	for(i=0; i<CONFIG_ENV_SIZE; i++)
+		buffer[i] = env2[i];
 
-	/* Erase */
+	/* SAVE bank 2 to 1*/
+	printf("Saving environment bank 2 in bank 1..");
+	debug("\nErasing env bank1..");
+	spifi_lpc_erase((char*)CONFIG_ENV1_ADDR, 1, NULL, S_VERIFY_ERASE);
+	debug(". ok\nProgramming ..");
+	spifi_lpc_program((char*)CONFIG_ENV1_ADDR, buffer, CONFIG_ENV_SIZE, 0, S_CALLER_ERASE);
+	debug(". ok\n");
+	printf(". done\n");
 
-	opers.dest = (char*)CONFIG_ENV_ADDR;
-	opers.length = (unsigned int)(CONFIG_ENV_SIZE / CONFIG_ENV_SECT_SIZE +1);
-  	opers.scratch = NULL;
-  	opers.options = S_VERIFY_ERASE;
-	printf("Erasing SPI Flash ..");
-	pSpifi->spifi_erase(&obj, &opers);
-	printf(". done. \n");
-	printf("\tErased %d sector(s).\n", opers.length);
-	/* Program */
 
-	/* Protect */
+	/* MODIFY BANK 2 */
+	spifi_lpc_erase((char*)CONFIG_ENV2_ADDR, 1, NULL, S_VERIFY_ERASE);
+	spifi_lpc_program((char*)CONFIG_ENV2_ADDR, (char*)env_ptr, CONFIG_ENV_SIZE, 0, S_CALLER_ERASE);
+
+
+	return 1;
 }
 
 
@@ -145,7 +146,7 @@ int saveenv(void){
 			goto done;
 
 		puts("Writing to SPI flash...");
-		ret = spi_flash_write(env_flash, CONFIG_ENV1_OFFSET, CONFIG_ENV_SIZE, env1_ptr);
+		ret = spi_flash_write(env_flash, CONFIG_ENV1_OFFSET, CONFIG_ENV_SIZE, env_ptr);
 		if (ret)
 			goto done;
 
@@ -175,11 +176,11 @@ int saveenv(void){
 			if (!env_flash)
 				goto err_probe;
 
-			ret = spi_flash_read(env_flash, CONFIG_ENV1_OFFSET, CONFIG_ENV_SIZE, env1_ptr);
+			ret = spi_flash_read(env_flash, CONFIG_ENV1_OFFSET, CONFIG_ENV_SIZE, env_ptr);
 			if (ret)
 				goto err_read;
 
-			if (crc32(0, env1_ptr->data, ENV_SIZE) != env1_ptr->crc)
+			if (crc32(0, env_ptr->data, ENV_SIZE) != env_ptr->crc)
 				goto err_crc;
 
 			gd->env_valid = 1;
@@ -195,42 +196,37 @@ int saveenv(void){
 
 				set_default_env();
 #else
-/*			unsigned int ret;
 
-			opers.length = CONFIG_ENV_SIZE;
-			opers.scratch = NULL;
-			opers.protect = 0;
-			opers.options = S_CALLER_ERASE;
-			opers.dest = (char *)env1_ptr;
-			ret = pSpifi->spifi_program(&obj, (char *)flash_addr, &opers);
-			if(ret==0x2000B){
-					printf("Relocating env failed : dest memory has to be erased \n Error code : 0x%x \n", ret);
+				if (crc32(0, env2_ptr->data, ENV_SIZE) == env2_ptr->crc) {
+					memcpy (env_ptr, (void*)env2_ptr, CONFIG_ENV_SIZE);
 					return;
-			}
-			else if(ret == 0x20004){
-				printf("Relocating env failed : dest address not in SPI Flash \n error code : 0x%x \n", ret);
+				}
+				if (crc32(0, env1_ptr->data, ENV_SIZE) == env1_ptr->crc) {
+					memcpy (env_ptr, (void*)env1_ptr, CONFIG_ENV_SIZE);
+					return;
+				}
+				debug("Your environment data has changed since last CRC check. Unable to rellocate.\n");
 				return;
-			}
-			else if(ret){
-					printf("Relocating env failed : error unknown \n error code : 0x%x \n", ret);
-					return;
-			}
-			else
-					printf("Relocating env in SPI Flash ok\n"); */
-			return;
 #endif
 		}
 
 int env_init(void)
 {
-	if (crc32(0, env1_ptr->data, ENV_SIZE) == env1_ptr->crc) {
-		gd->env_addr  = (ulong)&(env1_ptr->data);
+
+	if (crc32(0, env2_ptr->data, ENV_SIZE) == env2_ptr->crc) {
+		gd->env_addr  = (ulong)&(env2_ptr->data);
 		gd->env_valid = 1;
 		return(0);
 	}
+	if (crc32(0, env1_ptr->data, ENV_SIZE) == env1_ptr->crc) {
+		gd->env_addr  = (ulong)&(env1_ptr->data);
+		gd->env_valid = 1;
+		return 0;
+	}
+
 	/* SPI flash isn't usable before relocation */
 	gd->env_addr = (ulong)&default_environment[0];
-	gd->env_valid = 1;
+	gd->env_valid = 0;
 
 	return 0;
 }

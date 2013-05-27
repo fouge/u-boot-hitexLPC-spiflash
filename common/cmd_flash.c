@@ -45,11 +45,7 @@ int find_dev_and_part(const char *id, struct mtd_device **dev,
 extern flash_info_t flash_info[];	/* info for FLASH chips */
 
 #ifdef CONFIG_LPC_SPIFI
-#include <asm/arch/spifi_rom_api.h>
-
-extern SPIFIobj obj;
-extern SPIFI_RTNS * pSpifi;
-extern SPIFIopers opers;
+#include <spifi_lpc.h>
 #endif
 
 /*
@@ -60,21 +56,6 @@ extern SPIFIopers opers;
  * SPI Flash is the last number on this ROM (this ROM allows 1 SPI Flash
  * device, using LPC SPIFI driver )
  */
-
-#ifdef CONFIG_LPC_SPIFI
-/*
- * This routine erase a number of sectors (nSect) starting at address (start_addr)
- */
-int32_t erase_lpc_spi_flash(char* start_addr, uint32_t nSect, char* scratch, uint32_t options){
-	opers.dest = start_addr;
-	opers.length = nSect;
-  	opers.scratch = scratch;
-  	opers.options = options;
-	return pSpifi->spifi_erase(&obj, &opers);
-}
-#endif
-
-
 
 
 
@@ -146,11 +127,13 @@ int flash_sect_roundb (ulong *addr)
 	/* find the end addr of the sector where the *addr is */
 	found = 0;
 #ifdef CONFIG_LPC_SPIFI
+	unsigned int devSize = spifi_get_device_size();
+
 	if(*addr > 0x14000000 && *addr < 0x18000000)
 	{
-		for(i=0; i< obj.devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
-			if(i == ( obj.devSize/SPI_FLASH_SECT_SIZE -1 ))
-				sector_end_addr = (0x14000000 + obj.devSize)-1;
+		for(i=0; i< devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
+			if(i == ( devSize/SPI_FLASH_SECT_SIZE -1 ))
+				sector_end_addr = (0x14000000 + devSize)-1;
 			else
 				sector_end_addr = (0x14000000 + (i+1) * SPI_FLASH_SECT_SIZE) - 1;
 
@@ -163,9 +146,9 @@ int flash_sect_roundb (ulong *addr)
 		}
 	}
 	else if(*addr > 0x80000000 && *addr < 0x88000000){
-		for(i=0; i< obj.devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
-			if(i == ( obj.devSize/SPI_FLASH_SECT_SIZE -1 ))
-				sector_end_addr = (0x80000000 + obj.devSize)-1;
+		for(i=0; i< devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
+			if(i == ( devSize/SPI_FLASH_SECT_SIZE -1 ))
+				sector_end_addr = (0x80000000 + devSize)-1;
 			else
 				sector_end_addr = (0x80000000 + (i+1) * SPI_FLASH_SECT_SIZE) - 1;
 
@@ -352,23 +335,6 @@ flash_fill_sect_ranges (ulong addr_first, ulong addr_last,
 #endif /* CONFIG_SYS_NO_FLASH */
 
 
-/*
- * Print SPI Flash info
- */
-#ifdef CONFIG_LPC_SPIFI
-int spifi_print_info(void){
-	int i = 0;
-	printf("\nBank  # %ld SPIFI: ", CONFIG_SYS_MAX_FLASH_BANKS);
-	printf(" Size : %ld MB\n", obj.devSize>>20);
-	printf("SPIFI Driver used. ");
-	printf("Manufacturer ID: 0x%x, ", obj.mfger);
-	printf("Device ID: 0x%x\n", obj.devID);
-	printf("Base : 0x%x\n", obj.base);
-
-}
-#endif
-
-
 int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 #ifndef CONFIG_SYS_NO_FLASH
@@ -386,7 +352,7 @@ int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			flash_print_info (&flash_info[bank]);
 		}
 		#ifdef CONFIG_LPC_SPIFI
-			spifi_print_info();
+			spifi_print_info(CONFIG_SYS_MAX_FLASH_BANKS+1);
 		#endif
 
 		return 0;
@@ -403,7 +369,7 @@ int do_flinfo ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	/* Bank SPIFI */
 	if(bank==CONFIG_SYS_MAX_FLASH_BANKS+1){
-		spifi_print_info();
+		spifi_print_info(bank);
 	}
 	else{
 #endif
@@ -454,7 +420,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #ifdef CONFIG_LPC_SPIFI
 			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
 				/* Erase Device */
-			if(erase_lpc_spi_flash((char *)(obj.base),obj.memSize/SPI_FLASH_SECT_SIZE, NULL , S_VERIFY_ERASE))
+			if(spifi_lpc_erase_all())
 				printf(". failed ! \n");
 			else
 				printf(". done.\n");
@@ -527,7 +493,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		if(bank==CONFIG_SYS_MAX_FLASH_BANKS+1){
 			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
 				/* Erase Device */
-			int ret = erase_lpc_spi_flash((char *)(obj.base),obj.memSize/SPI_FLASH_SECT_SIZE, NULL , S_VERIFY_ERASE);
+			int ret = spifi_lpc_erase_all();
 			if(ret)
 				printf(".failed. Return : %d\n", ret);
 			else
@@ -572,19 +538,22 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	#ifdef CONFIG_LPC_SPIFI
 	unsigned int i;
 	unsigned int ret = 0;
+
+	unsigned int devSize = spifi_get_device_size();
+
 	/* If erase SPI flash sectors */
 	if((addr_first>=0x14000000 && addr_last<0x18000000) || (addr_first>=0x80000000 && addr_last<0x88000000)){
 		printf("Erase SPI Flash sector(s) :\n");
-		if(addr_first>=0x14000000 && addr_last<(0x14000000 + obj.devSize)){
+		if(addr_first>=0x14000000 && addr_last<(0x14000000 + devSize)){
 			addr_first += 0x6C000000;
 			addr_last += 0x6C000000;
 		}
-		if (addr_first>=0x80000000 && addr_last<(0x80000000 + obj.devSize)){
+		if (addr_first>=0x80000000 && addr_last<(0x80000000 + devSize)){
 			if(addr_first%SPI_FLASH_SECT_SIZE==0){
-				for(i=1; i <= ((obj.devSize - (addr_first - 0x80000000))  / SPI_FLASH_SECT_SIZE); i++){
+				for(i=1; i <= ((devSize - (addr_first - 0x80000000))  / SPI_FLASH_SECT_SIZE); i++){
 					if(addr_last == ((addr_first + i*SPI_FLASH_SECT_SIZE)-1)){
 						printf("\tStart address : 0x%x\tEnd Address : 0x%x \n", addr_first, addr_last);
-						ret = erase_lpc_spi_flash(addr_first, i, NULL, S_VERIFY_ERASE);
+						ret = spifi_lpc_erase(addr_first, addr_last - addr_first, NULL, S_VERIFY_ERASE);
 						if(!ret)
 							printf("\tErased %d sector(s).\n", i);
 						else
@@ -598,7 +567,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				printf("\tError: start address not on sector boundary, must be the first address of one sector.\n\tSector size is 0x%x\n", SPI_FLASH_SECT_SIZE);
 		}
 		else
-			printf("\tEnd address too high (and maybe start address too!). SPI Flash device is 0x%x long.\n", obj.devSize);
+			printf("\tEnd address too high (and maybe start address too!). SPI Flash device is 0x%x long.\n", spifi_get_device_size());
 	} /* END: erase SPI flash sectors */
 	/* Parallel Flash sectors */
 	else
