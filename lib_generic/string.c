@@ -20,6 +20,14 @@
 #include <linux/ctype.h>
 #include <malloc.h>
 
+#ifdef CONFIG_LPC_SPIFI
+#include "asm/arch/spifi_rom_api.h"
+
+extern SPIFIobj obj;
+extern SPIFI_RTNS * pSpifi;
+extern SPIFIopers opers;
+#endif
+
 
 #if 0 /* not used - was: #ifndef __HAVE_ARCH_STRNICMP */
 /**
@@ -466,7 +474,9 @@ void * memcpy(void *dest, const void *src, size_t count)
 {
 	unsigned long *dl = (unsigned long *)dest, *sl = (unsigned long *)src;
 	char *d8, *s8;
+#ifdef CONFIG_LPC_SPIFI
 
+#else
 	/* while all data is aligned (common case), copy a word at a time */
 	if ( (((ulong)dest | (ulong)src) & (sizeof(*dl) - 1)) == 0) {
 		while (count >= sizeof(*dl)) {
@@ -479,7 +489,7 @@ void * memcpy(void *dest, const void *src, size_t count)
 	s8 = (char *)sl;
 	while (count--)
 		*d8++ = *s8++;
-
+#endif
 	return dest;
 }
 #endif

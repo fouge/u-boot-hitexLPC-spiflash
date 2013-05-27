@@ -168,10 +168,7 @@ COBJS-$(CONFIG_USB_KEYBOARD) += usb_kbd.o
 
 #users defined 
 COBJS-y += cmd_spifi.o
-# COBJS-y += spifi/main_spifi.o
-# COBJS-y += spifi/system_LPC43xx.o
-# COBJS-y += spifi/lpc43xx_cgu.o
-# COBJS-y += spifi/lpc43xx_scu.o
+
 
 
 COBJS	:= $(sort $(COBJS-y))

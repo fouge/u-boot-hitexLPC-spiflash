@@ -37,7 +37,7 @@
 /*
  * Disable debug messages
  */
-#undef DEBUG
+// #undef DEBUG
 
 
 
@@ -177,63 +177,92 @@
 
 
 #if defined(CONFIG_SYS_FLASH_CS)
-#define CONFIG_SYS_FLASH_CFG		0x81 /* 16 bit, Byte Lane enabled */
-#define CONFIG_SYS_FLASH_WE		(1 - 1)		/* Minimum is enough */
-#define CONFIG_SYS_FLASH_OE		0		/* Minimum is enough */
-#define CONFIG_SYS_FLASH_RD		(15 - 1)	/* 70ns at 204MHz */
-#define CONFIG_SYS_FLASH_PAGE		(15 - 1)	/* 70ns at 204MHz */
-#define CONFIG_SYS_FLASH_WR		0x1f		/* Maximum */
-#define CONFIG_SYS_FLASH_TA		0x0f		/* Maximum */
+	#define CONFIG_SYS_FLASH_CFG		0x81 /* 16 bit, Byte Lane enabled */
+	#define CONFIG_SYS_FLASH_WE		(1 - 1)		/* Minimum is enough */
+	#define CONFIG_SYS_FLASH_OE		0		/* Minimum is enough */
+	#define CONFIG_SYS_FLASH_RD		(15 - 1)	/* 70ns at 204MHz */
+	#define CONFIG_SYS_FLASH_PAGE		(15 - 1)	/* 70ns at 204MHz */
+	#define CONFIG_SYS_FLASH_WR		0x1f		/* Maximum */
+	#define CONFIG_SYS_FLASH_TA		0x0f		/* Maximum */
+
+	/*
+	 * Define just parallel flash banks
+	 */
+	#define CONFIG_SYS_FLASH_BANK1_BASE		0x1C000000 /* CS0 */
+
+	#define CONFIG_SYS_FLASH_CFI				1
+	#define CONFIG_FLASH_CFI_DRIVER				1
+	#define CONFIG_FLASH_CFI_LEGACY				1
+	#define CONFIG_SYS_FLASH_LEGACY_2Mx16		1
+
+	#define CONFIG_SYS_FLASH_CFI_WIDTH			FLASH_CFI_16BIT
+
+	/* CONFIG_SYS_FLASH_BANKS_LIST	: list of all parallel Flash
+	 *
+	 * CONFIG_SYS_MAX_FLASH_BANKS : number of Flash banks
+	 * SPI Flash not included : this ROM allow one SPIFI device which bank number
+	 * is CONFIG_SYS_MAX_FLASH_BANKS + 1
+	 */
+	#define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE }
+	#define CONFIG_SYS_MAX_FLASH_BANKS			1
+	#define CONFIG_SYS_MAX_FLASH_SECT			1024
+
+	#ifdef CONFIG_LPC_SPIFI
+	#define CONFIG_SYS_FLASH_BANK1_SPIFI_BASE		0x80000000 /* SPIFI bank 1 */
+	#define CONFIG_SYS_FLASH_SPIFI_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_SPIFI_BASE }
+	#define SPI_FLASH_SECT_SIZE 	(64*1024) /* TODO : auto detect */
+	//#define CONFIG_SPI_FLASH
+	//#define CONFIG_SPI_FLASH_SPANSION
+	#endif
+
+
 
 /*
- * Define just parallel flash banks
- */
-#define CONFIG_SYS_FLASH_BANK1_BASE		0x1C000000 /* CS0 */
-
-#define CONFIG_SYS_FLASH_CFI				1
-#define CONFIG_FLASH_CFI_DRIVER				1
-#define CONFIG_FLASH_CFI_LEGACY				1
-#define CONFIG_SYS_FLASH_LEGACY_2Mx16		1
-
-#define CONFIG_SYS_FLASH_CFI_WIDTH			FLASH_CFI_16BIT
-
-/* CONFIG_SYS_FLASH_BANKS_LIST	: list of all parallel Flash
+ * *** IF environment variables in SPI flash (using LPC lib)
+ * *******************************************************************
  *
- * CONFIG_SYS_MAX_FLASH_BANKS : number of Flash banks
- * SPI Flash not included : this ROM allow one SPIFI device which bank number
- * is CONFIG_SYS_MAX_FLASH_BANKS + 1
+ * Environment variables are copied in two "banks" of configuration
+ * Prevent for losing environment variables data
+ *
+ * Sections are divided this way :
+ * 	****************
+ * 	|				|
+ * 	|	U-Boot		|
+ * 	|	firmware	|
+ * 	|				|
+ * 	****************	-> 0x14020000
+ * 	| env bank 1	|
+ * 	****************	-> 0x14020000 + n sector(s)
+ * 	| env bank 2	|
+ * 	****************
+ *
+ *
+ * *******************************************************************
  */
-#define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE }
-#define CONFIG_SYS_MAX_FLASH_BANKS			1
-#define CONFIG_SYS_MAX_FLASH_SECT			1024
 
-#ifdef CONFIG_LPC_SPIFI
-#define CONFIG_SYS_FLASH_BANK1_SPIFI_BASE		0x14000000 /* SPIFI bank 1 */
-#define CONFIG_SYS_FLASH_SPIFI_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_SPIFI_BASE }
-#define SPI_FLASH_SECT_SIZE 	(64*1024) /* TODO : auto detect */
-//#define CONFIG_SPI_FLASH
-//#define CONFIG_SPI_FLASH_SPANSION
-#endif
-/*
- * Store env in flash.
- */
-#define CONFIG_ENV_IS_IN_FLASH
+
+
+	/*
+	 * Store env in flash.
+	 */
+	#define CONFIG_ENV_IS_IN_SPI_FLASH
 #else
-/*
- * Store env in memory only, if no flash.
- */
-#define CONFIG_ENV_IS_NOWHERE
-#define CONFIG_SYS_NO_FLASH
+	/*
+	 * Store env in memory only, if no flash.
+	 */
+	#define CONFIG_ENV_IS_NOWHERE
+	#define CONFIG_SYS_NO_FLASH
 #endif
+
 
 #define CONFIG_ENV_SIZE			(4 * 1024)
+
 #ifdef CONFIG_LPC_SPIFI
-#define CONFIG_ENV_OFFSET	(128 * 1024)
-#define CONFIG_ENV_ADDR \
-	(CONFIG_SYS_FLASH_BANK1_BASE + CONFIG_ENV_OFFSET)
+	#define CONFIG_ENV1_OFFSET	(SPI_FLASH_SECT_SIZE*2) /* !!! Must be start address of a sector, see SPI_FLASH_SECT_SIZE*/
+	#define CONFIG_ENV_ADDR (CONFIG_SYS_FLASH_BANK1_SPIFI_BASE + CONFIG_ENV1_OFFSET)
 #else
-#define CONFIG_ENV_ADDR \
-	(CONFIG_SYS_FLASH_BANK1_BASE + 128 * 1024)
+	#define CONFIG_ENV_ADDR \
+		(CONFIG_SYS_FLASH_BANK1_BASE + 128 * 1024)
 #endif
 
 #define CONFIG_INFERNO			1
