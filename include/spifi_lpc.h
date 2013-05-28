@@ -19,6 +19,9 @@ int32_t spifi_lpc_program(char* dest, char* src, uint32_t length, int32_t protec
 
 uint32_t spifi_get_device_size(void);
 
+uint32_t spifi_lpc_cmd(uc opcode, uc addr, uc interData, uint16_t data);
+
 void spifi_print_info(char bank);
+
 
 #endif /* SPIFI_LPC_H_ */

@@ -475,7 +475,7 @@ void main_loop (void)
 #endif
 
 		if (len == -1)
-			puts ("<INTERRUPT from Cyril>\n");
+			puts ("<INTERRUPT>\n");
 		else
 			rc = run_command (lastcommand, flag);
 

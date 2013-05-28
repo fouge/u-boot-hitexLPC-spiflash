@@ -13,6 +13,9 @@
 #include <asm/arch/spifi_rom_api.h>
 #include <asm/arch/lpc43xx_scu.h>
 
+#include <spifi_lpc.h>
+#include <slld.h>
+
 /*******************************************************************/
 /* init_spifi : init spifi using library (see lpcware.com) */
 /*******************************************************************/
@@ -24,7 +27,7 @@ extern SPIFIopers opers;
 
 int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
-	int nsectors;
+	unsigned int nsectors;
     pSpifi = &spifi_table;
 
 	/* Initialize SPIFI driver */
@@ -42,4 +45,41 @@ int do_init_spifi (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	return 1;
 }
 
+int do_read_reg_spifi(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	uint8_t poll=0x00;
+	unsigned int ret;
+	pSpifi->cancel_mem_mode(&obj);
+	debug("\tCommand mode\n");
+	printf("Read device's status register : ");
+	ret = slld_RDSRCmd(&poll);
+	printf("return : %d \tvalue: 0x%x\n",ret, poll);
+
+	printf("Read device's configuration register : ");
+	ret = slld_RCRCmd(&poll);
+	printf("return : %d \tvalue: 0x%x\n",ret, poll);
+	pSpifi->set_mem_mode(&obj);
+	return 1;
+}
+
+int do_protect_sectors(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	uint8_t poll=0x00;
+	unsigned int * commandReg = (unsigned int *) 0x40003004;
+	printf("Protecting all sectors.. ");
+	DEVSTATUS devStat;
+	pSpifi->cancel_mem_mode(&obj);
+	debug("\tCommand mode\n");
+	if(!slld_BlockProtectOp(0x07, &devStat))
+	printf("Command reg : 0x%x", (*commandReg));
+	printf(". done.\n");
+	do_read_reg_spifi(cmdtp, flag, argc, argv);
+	pSpifi->set_mem_mode(&obj);
+	return 1;
+}
+
 U_BOOT_CMD(init_spifi, 1, 1, do_init_spifi, "init SPI flash using LPC library", "init SPI flash using LPC library");
+
+U_BOOT_CMD(spifi_read_reg, 1, 1, do_read_reg_spifi, "Read SPI Flash device's status register", "Read SPI Flash device's status register");
+
+U_BOOT_CMD(spifi_prot_all, 1, 1, do_protect_sectors, "Protect all SPI Flash sectors", "Protect all SPI Flash sectors");

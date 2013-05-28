@@ -15,9 +15,9 @@ SPIFIopers opers;
 /*
  * This routine erase a number of sectors (nSect) starting at address (start_addr)
  */
-int32_t spifi_lpc_erase(char* start_addr, uint32_t nBytes, char* scratch, uint32_t options){
+int32_t spifi_lpc_erase(char* start_addr, uint32_t nuint8_ts, char* scratch, uint32_t options){
 	opers.dest = start_addr;
-	opers.length = nBytes;
+	opers.length = nuint8_ts;
   	opers.scratch = scratch;
   	opers.options = options;
 
@@ -55,8 +55,9 @@ void spifi_print_info(char bank){
 
 }
 
-
-
+uint32_t spifi_lpc_cmd(uc opcode, uc addr, uc interData, uint16_t data){
+	return pSpifi->cmd(opcode, addr, interData, data);
+}
 
 /*
  * needed for SPIFI library from LPCware

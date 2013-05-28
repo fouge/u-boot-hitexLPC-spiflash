@@ -129,7 +129,7 @@ int flash_sect_roundb (ulong *addr)
 #ifdef CONFIG_LPC_SPIFI
 	unsigned int devSize = spifi_get_device_size();
 
-	if(*addr > 0x14000000 && *addr < 0x18000000)
+	if(*addr >= 0x14000000 && *addr < 0x18000000)
 	{
 		for(i=0; i< devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
 			if(i == ( devSize/SPI_FLASH_SECT_SIZE -1 ))
