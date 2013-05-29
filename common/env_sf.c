@@ -90,7 +90,7 @@ int saveenv(void){
 	/* SAVE bank 2 to 1*/
 	printf("Backing up old environment at 0x%x..", CONFIG_ENV1_ADDR);
 	debug("\nErasing env bank1..");
-	spifi_lpc_erase((char*)CONFIG_ENV1_ADDR, 1, NULL, S_VERIFY_ERASE);
+	spifi_lpc_erase((char*)CONFIG_ENV1_ADDR, 1, NULL);
 	debug(". ok\nProgramming ..");
 	spifi_lpc_program((char*)CONFIG_ENV1_ADDR, buffer, CONFIG_ENV_SIZE, 0, S_CALLER_ERASE);
 	debug(". ok\n");
@@ -100,7 +100,7 @@ int saveenv(void){
 	/* MODIFY BANK 2 */
 	printf("Saving new environment at 0x%x..", CONFIG_ENV2_ADDR);
 	debug("\nErasing env bank2..");
-	spifi_lpc_erase((char*)CONFIG_ENV2_ADDR, 1, NULL, S_VERIFY_ERASE);
+	spifi_lpc_erase((char*)CONFIG_ENV2_ADDR, 1, NULL);
 	debug(". ok\nProgramming ..");
 	spifi_lpc_program((char*)CONFIG_ENV2_ADDR, (char*)env_ptr, CONFIG_ENV_SIZE, 0, S_CALLER_ERASE);
 	debug(". ok\n");

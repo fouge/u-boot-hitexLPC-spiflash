@@ -145,7 +145,7 @@ int flash_sect_roundb (ulong *addr)
 			}
 		}
 	}
-	else if(*addr > 0x80000000 && *addr < 0x88000000){
+	else if(*addr >= 0x80000000 && *addr < 0x88000000){
 		for(i=0; i< devSize/SPI_FLASH_SECT_SIZE && !found; ++i){
 			if(i == ( devSize/SPI_FLASH_SECT_SIZE -1 ))
 				sector_end_addr = (0x80000000 + devSize)-1;
@@ -553,7 +553,7 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				for(i=1; i <= ((devSize - (addr_first - 0x80000000))  / SPI_FLASH_SECT_SIZE); i++){
 					if(addr_last == ((addr_first + i*SPI_FLASH_SECT_SIZE)-1)){
 						printf("\tStart address : 0x%x\tEnd Address : 0x%x \n", addr_first, addr_last);
-						ret = spifi_lpc_erase(addr_first, addr_last - addr_first, NULL, S_VERIFY_ERASE);
+						ret = spifi_lpc_erase(addr_first, addr_last - addr_first, NULL);
 						if(!ret)
 							printf("\tErased %d sector(s).\n", i);
 						else

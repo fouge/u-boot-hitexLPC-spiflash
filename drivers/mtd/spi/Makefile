@@ -34,7 +34,6 @@ COBJS-$(CONFIG_SPI_FLASH_STMICRO)	+= stmicro.o
 COBJS-$(CONFIG_SPI_FLASH_WINBOND)	+= winbond.o
 COBJS-$(CONFIG_SPI_M95XXX) += eeprom_m95xxx.o
 COBJS-$(CONFIG_LPC_SPIFI) += spifi_lpc.o
-COBJS-$(CONFIG_LPC_SPIFI) += slld.o
 
 COBJS	:= $(COBJS-y)
 SRCS	:= $(COBJS:.o=.c)

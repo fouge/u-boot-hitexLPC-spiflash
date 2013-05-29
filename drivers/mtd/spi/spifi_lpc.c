@@ -15,23 +15,24 @@ SPIFIopers opers;
 /*
  * This routine erase a number of sectors (nSect) starting at address (start_addr)
  */
-int32_t spifi_lpc_erase(char* start_addr, uint32_t nuint8_ts, char* scratch, uint32_t options){
+int32_t spifi_lpc_erase(char* start_addr, uint32_t nBytes, char* scratch){
 	opers.dest = start_addr;
-	opers.length = nuint8_ts;
+	opers.length = nBytes;
   	opers.scratch = scratch;
-  	opers.options = options;
+  	opers.protect = -1; /* save & restore protection */
+  	opers.options = S_ERASE_AS_REQD | S_VERIFY_ERASE; /* Erase if not 0xFFFF and then verify memory */
 
 	return pSpifi->spifi_erase(&obj, &opers);
 }
 
 int32_t spifi_lpc_erase_all(void){
-	return spifi_lpc_erase((char *)(obj.base),obj.devSize, NULL , S_VERIFY_ERASE);
+	return spifi_lpc_erase((char *)(obj.base),obj.devSize, NULL);
 }
 
-int32_t spifi_lpc_program(char* dest, char* addr_src, uint32_t length, int32_t protect, uint32_t options) {
+int32_t spifi_lpc_program(char* dest, char* addr_src, uint32_t length, char* scratch, uint32_t options) {
 	opers.length = length;
-	opers.scratch = NULL;
-	opers.protect = protect;
+	opers.scratch = scratch;
+	opers.protect = -1; /* save & restore protection */
 	opers.options = options;
 	opers.dest = (char *)dest;
 	return pSpifi->spifi_program(&obj, (char *)addr_src, &opers);

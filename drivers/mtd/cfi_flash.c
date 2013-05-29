@@ -2054,13 +2054,15 @@ unsigned long flash_init (void)
 
 #ifdef CONFIG_LPC_SPIFI
 		/* Initialize SPIFI driver */
+		uint32_t mhz = 80;
 		printf("Initializing SPIFI...\n");
-		if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, 12)) {
+		if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, mhz)) {
 			printf("failed\n");
 		}
 		debug("SPI FLASH manufacturer ID = 0x%x \n\r", obj.mfger);
 		debug("SPI FLASH Device Type = 0x%x \n\r", obj.devType);
 		debug("SPI FLASH Device ID = 0x%x \n\r", obj.devID);
+		debug("SPI FLASH Speed = %dMHz Clock Rate \n\r", mhz);
 		printf("SPIFI size : ");
 		print_size (obj.memSize, "\n");
 

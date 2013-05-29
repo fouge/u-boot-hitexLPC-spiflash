@@ -114,8 +114,8 @@ typedef enum {stat_inst, block_erase, prog_inst, chip_erase} inst_type;
 #define    OPCODE_FOLLOWS 0xFF
 
 /* basic SPI commands for serial flash */
-#define BASE_READ_CMD        (CMD_RD<<OPCODE_SHIFT|4<<FRAMEFORM_SHIFT|UNL_DATA)
-#define FAST_READ_CMD (CMD_READ_FAST<<OPCODE_SHIFT|4<<FRAMEFORM_SHIFT|1<<INTLEN_SHIFT|UNL_DATA)
+#define BASE_READ_CMD      (CMD_RD<<OPCODE_SHIFT|4<<FRAMEFORM_SHIFT|UNL_DATA)
+#define FAST_READ_CMD 		(CMD_READ_FAST<<OPCODE_SHIFT|4<<FRAMEFORM_SHIFT|1<<INTLEN_SHIFT|UNL_DATA)
 #define BASE_PROG_CMD      (CMD_PROG<<OPCODE_SHIFT|4<<FRAMEFORM_SHIFT|DOUT)
 
 /* the length of a standard	program command is 256 on all devices */
@@ -189,7 +189,7 @@ typedef struct {
   void(*setSize)         (SPIFIobj *obj, int32_t value);
   int32_t (*setDev)          (SPIFIobj *obj, uint32_t opts, uint32_t mem_cmd, 
                           uint32_t prog_cmd);
-  uint32_t (*cmd)        (uc op, uc addrLen, uc intLen, uint16_t len); /* opcode, address, intermediate data, data*/
+  uint32_t (*cmd)        (uc op, uc addrLen, uc intLen, uint16_t len); /* opcode, address, intermediate data, data length*/
   uint32_t (*readAd)     (SPIFIobj *obj, uint32_t cmd, uint32_t addr);
   void (*send04)         (SPIFIobj *obj, uc op, uc len, uint32_t value);
   void (*wren_sendAd)    (SPIFIobj *obj, uint32_t cmd, uint32_t addr, uint32_t value);

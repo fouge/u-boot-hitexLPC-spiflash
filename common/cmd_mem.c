@@ -470,11 +470,11 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		ret = spifi_lpc_program(dest, addr, count*size, 0, S_CALLER_ERASE);
 
 		if(ret==0x2000B){
-		printf(". failed! \nSomething went wrong : dest memory has to be erased \n Error code : 0x%x \n", ret);
+		printf(". failed! \nMemory (at 0x%x) has to be erased.\n Error code : 0x%x \n", dest, ret);
 			return 0;
 		}
 		else if(ret){
-				printf(". failed! Something went wrong : error unknown \n error code : 0x%x \n", ret);
+				printf(". failed!\tError code : 0x%x \n", ret);
 				return 0;
 		}
 		else
