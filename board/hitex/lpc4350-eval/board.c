@@ -761,7 +761,7 @@ int dram_init(void)
 		LPC_EMC_DYCTRL_CE_MSK | LPC_EMC_DYCTRL_CS_MSK |
 		(LPC_EMC_DYCTRL_I_PALL << LPC_EMC_DYCTRL_I_BITS);
 	LPC_EMC->dy_rfsh = SDRAM_REFRESH_FAST;
-	mdelay(1);
+	mdelay(100);
 
 	/*
 	 * Set refresh period

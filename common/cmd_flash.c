@@ -420,8 +420,11 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #ifdef CONFIG_LPC_SPIFI
 			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
 				/* Erase Device */
-			if(spifi_lpc_erase_all())
-				printf(". failed ! \n");
+			unsigned int ret = spifi_lpc_erase_all();
+			if(ret = 0x20003)
+			{
+				printf(". failed ! Some sectors are protected.\n");
+			}
 			else
 				printf(". done.\n");
 #endif
@@ -494,8 +497,10 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			printf ("Erase SPI Flash, Bank # %ld ..", CONFIG_SYS_MAX_FLASH_BANKS+1);
 				/* Erase Device */
 			int ret = spifi_lpc_erase_all();
-			if(ret)
-				printf(".failed. Return : %d\n", ret);
+			if(ret = 0x20003)
+				printf(". failed ! Some sectors are protected.\n");
+			else if (ret)
+				printf(". failed ! Error code 0x%x.\n", ret);
 			else
 				printf(". done.\n");
 		}
@@ -555,7 +560,9 @@ int do_flerase (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 						printf("\tStart address : 0x%x\tEnd Address : 0x%x \n", addr_first, addr_last);
 						ret = spifi_lpc_erase(addr_first, addr_last - addr_first, NULL);
 						if(!ret)
-							printf("\tErased %d sector(s).\n", i);
+							printf("\tErased %d sector%s.\n", i, (i>1)?"s":"");
+						else if(ret == 0x20003)
+							printf("Erasing failed : sector%s protected.\n", (i>1)?"s":"");
 						else
 							printf("\tErasing failed : return %d\n", ret);
 						return 0;
@@ -707,10 +714,11 @@ int do_protect (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #ifdef CONFIG_LPC_SPIFI
 			printf ("%sProtect SPI Flash Bank # %ld\n",
 				p ? "" : "Un-", CONFIG_SYS_MAX_FLASH_BANKS+1);
-			/*
-			 * TODO !! PROTECT
-			 */
-			printf ("!! Not implemented yet !!\n");
+			if(spifi_protect_all(p)){
+				printf("Fail !\n");
+			}
+			else
+				printf("All SPI Flash sectors are %sprotected.\n", p ? "" : "un-");
 #endif
 
 		return rcode;
@@ -775,6 +783,24 @@ int do_protect (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	if (strcmp(argv[2], "bank") == 0) {
 		bank = simple_strtoul(argv[3], NULL, 16);
+
+#ifdef CONFIG_LPC_SPIFI
+		if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS+1)) {
+			printf ("Only FLASH Banks # 1 ... # %d supported, last is SPI Flash\n",
+				CONFIG_SYS_MAX_FLASH_BANKS+1);
+			return 1;
+		}
+		printf ("%sProtect %s Flash Bank # %ld..",
+			p ? "" : "Un-", (bank==CONFIG_SYS_MAX_FLASH_BANKS+1)? "SPI" : "", bank);
+		if(bank == CONFIG_SYS_MAX_FLASH_BANKS+1){
+			if(spifi_protect_all(p))
+				printf("Fail\n");
+			else
+				printf(". done.\n");
+			return 1;
+		}
+
+#else
 		if ((bank < 1) || (bank > CONFIG_SYS_MAX_FLASH_BANKS)) {
 			printf ("Only FLASH Banks # 1 ... # %d supported\n",
 				CONFIG_SYS_MAX_FLASH_BANKS);
@@ -782,8 +808,8 @@ int do_protect (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 		printf ("%sProtect Flash Bank # %ld\n",
 			p ? "" : "Un-", bank);
+#endif
 		info = &flash_info[bank-1];
-
 		if (info->flash_id == FLASH_UNKNOWN) {
 			puts ("missing or unknown FLASH type\n");
 			return 1;
@@ -910,7 +936,16 @@ U_BOOT_CMD(
 U_BOOT_CMD(
 	protect,  4,  0,   do_protect,
 	"enable or disable FLASH write protection",
-	"on  start end\n"
+	"on  all\n    - protect all FLASH banks\n"
+	"protect off all\n    - make all FLASH banks writable\n"
+#ifdef CONFIG_LPC_SPIFI
+	"\nSPI Flash :\n"
+	"protect on bank N\n    - protect FLASH bank # N\n"
+	"protect off bank N\n    - make FLASH bank # N writable\n"
+	"\tsee sfprot for more\n"
+	"\nParallel Flash : \n"
+#endif
+	"protect on start end\n"
 	"    - protect FLASH from addr 'start' to addr 'end'\n"
 	"protect on start +len\n"
 	"    - protect FLASH from addr 'start' to end of sect "
@@ -919,7 +954,6 @@ U_BOOT_CMD(
 	"    - protect sectors SF-SL in FLASH bank # N\n"
 	"protect on  bank N\n    - protect FLASH bank # N\n"
 	TMP_PROT_ON
-	"protect on  all\n    - protect all FLASH banks\n"
 	"protect off start end\n"
 	"    - make FLASH from addr 'start' to addr 'end' writable\n"
 	"protect off start +len\n"
@@ -929,7 +963,6 @@ U_BOOT_CMD(
 	"    - make sectors SF-SL writable in FLASH bank # N\n"
 	"protect off bank N\n    - make FLASH bank # N writable\n"
 	TMP_PROT_OFF
-	"protect off all\n    - make all FLASH banks writable"
 );
 
 #undef	TMP_ERASE

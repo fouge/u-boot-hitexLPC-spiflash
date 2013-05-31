@@ -20,9 +20,10 @@ int32_t spifi_lpc_program(char* dest, char* addr_src, uint32_t length, char* scr
 
 uint32_t spifi_get_device_size(void);
 
-uint32_t spifi_lpc_cmd(uc opcode, uc addr, uc interData, uint16_t data);
-
 void spifi_print_info(char bank);
 
+uint32_t spifi_protect_all(int onoff);
+
+uint32_t spifi_protect_fract(unsigned int nSectors);
 
 #endif /* SPIFI_LPC_H_ */

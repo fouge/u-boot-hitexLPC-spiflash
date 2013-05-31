@@ -47,6 +47,8 @@
  * Use functions defined in drivers/mtd/spifi/spifi_lpc.c for any operation on SPIFI
  */
 #include <asm/arch/spifi_rom_api.h>
+#include <asm/arch/lpc43xx_scu.h>
+#include <asm/arch/lpc43xx_cgu.h>
 
 extern SPIFIobj obj;
 extern SPIFI_RTNS * pSpifi;
@@ -2055,7 +2057,14 @@ unsigned long flash_init (void)
 #ifdef CONFIG_LPC_SPIFI
 		/* Initialize SPIFI driver */
 		uint32_t mhz = 80;
+
 		printf("Initializing SPIFI...\n");
+		/* set up SPIFI I/O (undocumented bit 7 set as 1, Aug 2 2011) */
+		LPC_SCU->SFSP3_3 = 0xF3; /* high drive for SCLK */
+		/* IO pins */
+		LPC_SCU->SFSP3_4=LPC_SCU->SFSP3_5=LPC_SCU->SFSP3_6=LPC_SCU->SFSP3_7 = 0xD3;
+		LPC_SCU->SFSP3_8 = 0x13; /* CS doesn't need feedback */
+		obj.stat.hw = (0x20<<8) | (7<<3);
 		if (pSpifi->spifi_init(&obj, 3, S_RCVCLK | S_FULLCLK, mhz)) {
 			printf("failed\n");
 		}

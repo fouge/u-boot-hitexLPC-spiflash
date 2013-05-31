@@ -6,12 +6,15 @@
  */
 
 #include <spifi_lpc.h>
+#include <common.h>
 
 SPIFIobj obj;
 SPIFI_RTNS * pSpifi = &spifi_table;
 SPIFIopers opers;
 
 #define SPI_FLASH_SECT_SIZE		(64*1024)
+
+
 /*
  * This routine erase a number of sectors (nSect) starting at address (start_addr)
  */
@@ -20,7 +23,7 @@ int32_t spifi_lpc_erase(char* start_addr, uint32_t nBytes, char* scratch){
 	opers.length = nBytes;
   	opers.scratch = scratch;
   	opers.protect = -1; /* save & restore protection */
-  	opers.options = S_ERASE_AS_REQD | S_VERIFY_ERASE; /* Erase if not 0xFFFF and then verify memory */
+  	opers.options = S_CALLER_ERASE | S_VERIFY_ERASE | S_CALLER_PROT; /* Erase if not 0xFFFF and then verify memory */
 
 	return pSpifi->spifi_erase(&obj, &opers);
 }
@@ -42,23 +45,67 @@ uint32_t spifi_get_device_size(void){
 	return obj.devSize;
 }
 
-
 /*
  * Print SPI Flash info
  */
 void spifi_print_info(char bank){
-	printf("\nBank  # %ld SPIFI: ", bank);
-	printf(" Size : %ld MB\n", obj.devSize>>20);
+	printf("\nBank  # %d SPIFI: ", bank);
+	printf(" Size : %d MB\n", obj.devSize>>20);
 	printf("SPIFI Driver used. ");
 	printf("Manufacturer ID: 0x%x, ", obj.mfger);
 	printf("Device ID: 0x%x\n", obj.devID);
 	printf("Base : 0x%x\n", obj.base);
-
 }
 
-uint32_t spifi_lpc_cmd(uc opcode, uc addr, uc interData, uint16_t data){
-	return pSpifi->cmd(opcode, addr, interData, data);
+
+uint32_t spifi_protect_all(int onoff){
+	debug("\nSPI Flash Status register : 0x%x\n", obj.stat.hw);
+
+	if(onoff)
+		opers.protect = (7<<2) | (0x20 << 8); /* All Block Protect bits set to 1*/
+	else
+	{
+		opers.protect = obj.stat.hw & 0xFFE3; /* All Block Protect bits set to 0*/
+	}
+	opers.dest = (char *)0x80000000;
+	unsigned int ret = pSpifi->spifi_program(&obj, (char *)0x80000000, &opers);
+	debug("SPI Flash Status register 0x%x\n", obj.stat.hw);
+	return ret;
 }
+
+/*
+ * This function protect a part of SPI flash, depending of the number of sectors.
+ * !! The number of sectors must be 0 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+ */
+uint32_t spifi_protect_fract(unsigned int nSectors){
+	if(nSectors==0){
+		return spifi_protect_all(0);
+	}
+
+	debug("SPI Flash Status register : 0x%x\n", obj.stat.hw);
+	unsigned int prot = 1;
+	unsigned int i = 2;
+	for(; i<=128; i*=2){
+		if(nSectors == i)
+		{
+			opers.protect = (prot<<2) | (0x20 << 8);
+			opers.dest = (char *)0x80000000;
+			unsigned int ret = pSpifi->spifi_program(&obj, (char *)0x80000000, &opers);
+			debug("SPI Flash Status register 0x%x\n", obj.stat.hw);
+			return ret;
+		}
+		prot++;
+	}
+	debug("Error in  %s() : Bad number of sectors\nUnable to protect sectors\n", __FUNCTION__);
+	return 1;
+}
+
+
+
+
+
+
+
 
 /*
  * needed for SPIFI library from LPCware

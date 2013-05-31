@@ -144,7 +144,6 @@ void
 #endif /* CONFIG_LPC18XX_NORFLASH_BOOTSTRAP_WORKAROUND */
 
 
-#ifndef CONFIG_LPC18XX_BOOTHEADER
 	//
 	// Copy sections from Flash
 	//
@@ -168,7 +167,7 @@ void
 	unsigned int *pulDest = (unsigned int*) &_bss_start;
 	for (loop = 0; loop < (&_bss_end - &_bss_start); loop = loop + 4)
 		*pulDest++ = 0;
-#endif
+
 	/*
 	 * In U-boot (armboot) lingvo, "go to the C code" -
 	 * in fact, with M3, we are at the C code from the very beginning.

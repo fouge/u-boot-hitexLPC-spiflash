@@ -19,6 +19,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
+ *
+ * Updated : command which find the entry point for simple firmware (with entry point at flashaddr +1)
  */
 
 /*
@@ -60,13 +62,49 @@ int do_go (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	return rcode;
 }
 
+
+int do_start (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	ulong *	addr;
+	ulong rc;
+	int     rcode = 0;
+
+	if (argc != 2) {
+		cmd_usage(cmdtp);
+		return 1;
+	}
+
+	(*addr) = simple_strtoul(argv[1], NULL, 16);
+
+	ulong entryPoint = *(addr+1);
+
+	printf ("## Starting application at 0x%08lX ...\n", entryPoint);
+
+	/*
+	 * pass address parameter as argv[0] (aka command name),
+	 * and all remaining args
+	 */
+	rc = do_go_exec ((void *)entryPoint, argc - 1, argv + 1);
+	if (rc != 0) rcode = 1;
+
+	printf ("## Application terminated, rc = 0x%lX\n", rc);
+	return rcode;
+}
+
 /* -------------------------------------------------------------------- */
 
 U_BOOT_CMD(
 	go, CONFIG_SYS_MAXARGS, 1,	do_go,
-	"start application at address 'addr'",
-	"addr [arg ...]\n    - start application at address 'addr'\n"
+	"start application at address 'entrypointaddr'",
+	"entrypointaddr [arg ...]\n    - start application at address 'entrypointaddr'\n"
 	"      passing 'arg' as arguments"
+);
+
+U_BOOT_CMD(
+	start, 2, 0,	do_start,
+	"start simple firmware loaded at address 'addr'",
+	"addr\n    - start simple firmware (no header) at address 'addr'\n"
+	"      This address is the firmware's first address on the memory (flashaddr)\n      This command looks for the entry point"
 );
 
 extern int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
@@ -76,3 +114,5 @@ U_BOOT_CMD(
 	"Perform RESET of the CPU",
 	""
 );
+
+

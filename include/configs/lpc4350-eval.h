@@ -64,7 +64,7 @@
  * Add header to the U-Boot image to pass necessary information
  * to the Boot ROM bootloader.
  */
-#define CONFIG_LPC18XX_BOOTHEADER
+// #define CONFIG_LPC18XX_BOOTHEADER
 
 /*
  * Enable GPIO driver
@@ -421,15 +421,15 @@
 #define CONFIG_EXTRA_ENV_SETTINGS				\
 	"loadaddr=0x28000000\0"					\
 	"addip=setenv bootargs ${bootargs} ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}:eth0:off\0"				\
-	"flashaddr=1C040000\0"					\
+	"flashaddr=14000000\0"					\
 	"flashboot=run addip;bootm ${flashaddr}\0"		\
 	"ethaddr=C0:B1:3C:88:88:90\0"				\
-	"ipaddr=172.17.4.215\0"					\
-	"serverip=172.17.0.1\0"					\
-	"image=lpc18xx/uImage\0"				\
+	"ipaddr=192.168.200.102\0"					\
+	"serverip=192.168.200.101\0"					\
+	"image=u-boot.bin\0"				\
 	"netboot=tftp ${image};run addip;bootm\0"		\
 	"update=tftp ${image};"					\
-	"prot off ${flashaddr} +${filesize};"			\
+	"sfprot 0;"			\
 	"era ${flashaddr} +${filesize};"			\
 	"cp.b ${loadaddr} ${flashaddr} ${filesize}\0"
 

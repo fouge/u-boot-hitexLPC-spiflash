@@ -257,7 +257,7 @@ void env_relocate (void)
 
 	if (gd->env_valid == 0)  /* Environment variables never saved in flash before */
 	{
-#if defined(CONFIG_GTH)	|| defined(CONFIG_ENV_IS_NOWHERE)	/* Environment not changable */
+#if defined(CONFIG_GTH)	|| defined(CONFIG_ENV_IS_NOWHERE)	/* Environment not changeable */
 		puts ("Using default environment\n\n");
 #else
 		debug("*** Warning - bad CRC, using default environment\n\n");

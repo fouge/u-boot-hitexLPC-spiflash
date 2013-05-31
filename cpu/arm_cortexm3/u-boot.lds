@@ -7,7 +7,7 @@ ENTRY(_start)
 
 MEMORY
 {
- SPIFI (rx): ORIGIN = (0x14000000 + 0x10), LENGTH = ((16 * 1024 * 1024) - 0x10)
+ SPIFI (rx): ORIGIN = (0x14000000), LENGTH = ((16 * 1024 * 1024) - 0x10)
  Local_SRAM128 (rwx): ORIGIN = 0x10000000, LENGTH = (128*1024)
  RAM (rw): ORIGIN = 0x20000000, LENGTH = (32 * 1024)
  RAM_BUF (r): ORIGIN = 0x20000000 + LENGTH(RAM), LENGTH = (1 * 1024)
@@ -16,7 +16,7 @@ MEMORY
 }
 SECTIONS
 {
- .vectors (0x14000000 + 0x10) :
+ .vectors (0x14000000) :
  {
   *(.vectors)
    /* Global Section Table */

@@ -64,7 +64,15 @@ typedef union {
 typedef struct {
 	uint32_t base, regbase, devSize, memSize;
 	uc mfger, devType, devID, busy;
+
+	/*
+	 * Status (first byte) &
+	 * configuration register (2nd byte) of the SPI flash
+	 * <=> opers.protect
+	 * use opers.protect and program with dest=src to configure these registers
+	 */
 	stat_t stat;
+
 	uint16_t reserved;
 	uint16_t set_prot, write_prot;
 	uint32_t mem_cmd, prog_cmd;

@@ -467,11 +467,14 @@ int do_mem_cp ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		if(dest < 0x18000000)
 			dest += 0x6C000000;
 
-		ret = spifi_lpc_program(dest, addr, count*size, 0, S_CALLER_ERASE);
-
+		ret = spifi_lpc_program((char*)dest, (char*)addr, count*size, 0, (S_CALLER_PROT));
 		if(ret==0x2000B){
-		printf(". failed! \nMemory (at 0x%x) has to be erased.\n Error code : 0x%x \n", dest, ret);
+		printf(". failed! \nMemory (at 0x%x) has to be erased.\n Error code : 0x%x \n", (unsigned int)dest, ret);
 			return 0;
+		}
+		else if(ret==0x20003){
+			printf(". failed! \nMemory protected between 0x%x to 0x%x.\n Error code : 0x%x \n", (unsigned int)dest, (unsigned int)(dest + count*size), ret);
+				return 0;
 		}
 		else if(ret){
 				printf(". failed!\tError code : 0x%x \n", ret);
@@ -1103,14 +1106,37 @@ mod_mem(cmd_tbl_t *cmdtp, int incrflag, int flag, int argc, char *argv[])
 				 */
 				reset_cmd_timeout();
 #endif
-				if (size == 4)
-					*((uint   *)addr) = i;
-				else if (size == 2)
-					*((ushort *)addr) = i;
+
+#ifdef CONFIG_LPC_SPIFI
+			if((addr >=0x14000000 && addr < 0x18000000) || (addr >=0x80000000 && addr < 0x88000000)){
+				ulong tempAddr;
+
+				if(addr >=0x14000000 && addr < 0x18000000)
+					tempAddr = addr + 0x6C000000;
 				else
-					*((u_char *)addr) = i;
-				if (incrflag)
-					addr += size;
+					tempAddr = addr;
+
+				unsigned int ret = spifi_lpc_program((char*)tempAddr, (char*)&i, sizeof(i), (char*)0x28000000, S_CALLER_PROT);
+				if(ret == 0x20003){
+					printf("Writing in SPI flash failed : sector protected. \n");
+					return 0;
+				}
+				else if(ret){
+					printf("Writing in SPI flash failed. Error code : 0x%x. \n", ret);
+					return 0;
+				}
+			}
+#else
+			if (size == 4)
+				*((uint   *)addr) = i;
+			else if (size == 2)
+				*((ushort *)addr) = i;
+			else
+				*((u_char *)addr) = i;
+#endif
+			if (incrflag)
+				addr += size;
+
 			}
 		}
 	} while (nbytes);
