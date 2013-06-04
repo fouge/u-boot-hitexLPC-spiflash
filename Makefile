@@ -222,6 +222,9 @@ LIBS += drivers/pci/libpci.a
 LIBS += drivers/pcmcia/libpcmcia.a
 LIBS += drivers/power/libpower.a
 LIBS += drivers/spi/libspi.a
+ifdef CONFIG_LPC18XX_USB
+LIBS += drivers/usb/lpc43_cdc/liblpc43_usb_cdc.a
+endif
 ifeq ($(CPU),mpc83xx)
 LIBS += drivers/qe/qe.a
 endif

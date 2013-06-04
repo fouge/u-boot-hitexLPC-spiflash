@@ -377,7 +377,11 @@ void start_armboot (void)
 	/* IP Address */
 	gd->bd->bi_ip_addr = getenv_IPaddr ("ipaddr");
 
-	stdio_init ();	/* get the devices list going. */
+	/* enable exceptions */
+	enable_interrupts ();
+
+
+	stdio_init ();	/* get the devices list going. (USBtty init) */
 
 	jumptable_init ();
 
@@ -396,9 +400,6 @@ void start_armboot (void)
 	/* miscellaneous platform dependent initialisations */
 	misc_init_r ();
 #endif
-
-	/* enable exceptions */
-	enable_interrupts ();
 
 	/* Perform network card initialisation if necessary */
 #ifdef CONFIG_DRIVER_TI_EMAC

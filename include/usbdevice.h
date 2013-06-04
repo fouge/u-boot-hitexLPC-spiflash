@@ -291,7 +291,7 @@ struct usb_bus_instance;
  * USB Spec Release number
  */
 
-#define USB_BCD_VERSION			0x0110
+#define USB_BCD_VERSION			0x0200
 
 
 /*

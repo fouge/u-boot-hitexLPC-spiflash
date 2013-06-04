@@ -39,6 +39,8 @@
 #include <asm/proc-armv/ptrace.h>
 
 #ifdef CONFIG_USE_IRQ
+
+
 DECLARE_GLOBAL_DATA_PTR;
 
 int interrupt_init (void)

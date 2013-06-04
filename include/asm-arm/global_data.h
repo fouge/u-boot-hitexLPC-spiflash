@@ -33,6 +33,7 @@
  * Keep it *SMALL* and remember to set CONFIG_SYS_GBL_DATA_SIZE > sizeof(gd_t)
  */
 
+
 typedef	struct	global_data {
 	bd_t		*bd;
 	unsigned long	flags;

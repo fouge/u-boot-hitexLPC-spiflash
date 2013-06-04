@@ -43,7 +43,8 @@
  * DO NOT Reuse this Vendor/Product setup with protocol incompatible devices */
 
 #ifndef CONFIG_USBD_VENDORID
-#define CONFIG_USBD_VENDORID		0x0525	/* Linux/NetChip */
+#define CONFIG_USBD_VENDORID		0x1FC9	/* NXP Semiconductors */
+// #define CONFIG_USBD_VENDORID		0x0525	/* Linux/NetChip */
 #endif
 #ifndef CONFIG_USBD_PRODUCTID_GSERIAL
 #define CONFIG_USBD_PRODUCTID_GSERIAL	0xa4a6	/* gserial */
@@ -52,7 +53,7 @@
 #define CONFIG_USBD_PRODUCTID_CDCACM	0xa4a7	/* CDC ACM */
 #endif
 #ifndef CONFIG_USBD_MANUFACTURER
-#define CONFIG_USBD_MANUFACTURER	"Das U-Boot"
+#define CONFIG_USBD_MANUFACTURER	"NXP SEMICOND - U-Boot"
 #endif
 #ifndef CONFIG_USBD_PRODUCT_NAME
 #define CONFIG_USBD_PRODUCT_NAME	U_BOOT_VERSION
@@ -72,7 +73,7 @@
 
 #define USBTTY_DEVICE_CLASS	COMMUNICATIONS_DEVICE_CLASS
 
-#define USBTTY_BCD_DEVICE	0x00
+#define USBTTY_BCD_DEVICE	0x100
 #define USBTTY_MAXPOWER		0x00
 
 #define STR_LANG		0x00

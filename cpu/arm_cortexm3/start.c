@@ -50,6 +50,9 @@ extern char _bss_end;
 
 void _start(void);
 void default_isr(void);
+#ifdef CONFIG_LPC18XX_USB
+void USB0_IRQHandler(void);
+#endif
 
 extern void start_armboot(void);
 
@@ -89,7 +92,13 @@ unsigned int vectors[] __attribute__((section(".vectors"))) = {
 	/*
 	 * Other exceptions
 	 */
+#ifdef CONFIG_LPC18XX_USB
+	[2 ... 23]	= (unsigned int)&default_isr,
+	[24] = (unsigned int)&USB0_IRQHandler,
+	[25 ... 165]	= (unsigned int)&default_isr
+#else
 	[2 ... 165]	= (unsigned int)&default_isr
+#endif
 };
 
 #ifdef CONFIG_LPC18XX_NORFLASH_BOOTSTRAP_WORKAROUND
@@ -180,6 +189,29 @@ void
 	 * the malloc pool right behind the stack. See how armboot_start
 	 * is defined in the CPU specific .lds file.
 	 */
+
+
+	// Clear all pending interrupts in the NVIC
+	volatile unsigned int *NVIC_ICPR = (unsigned int *) 0xE000E280;
+	unsigned int irqpendloop;
+	for (irqpendloop = 0; irqpendloop < 8; irqpendloop++) {
+		*(NVIC_ICPR+irqpendloop)= 0xFFFFFFFF;
+	}
+
+	// Reenable interrupts
+	__enable_irq();
+
+
+	// ******************************
+	// Check to see if we are running the code from a non-zero
+    // address (eg RAM, external flash), in which case we need
+    // to modify the VTOR register to tell the CPU that the
+    // vector table is located at a non-0x0 address.
+	unsigned int * pSCB_VTOR = (unsigned int *) 0xE000ED08;
+	if ((unsigned int *)vectors!=(unsigned int *) 0x00000000) {
+		// CMSIS : SCB->VTOR = <address of vector table>
+		*pSCB_VTOR = (unsigned int)vectors;
+	}
 
 	_armboot_start = (unsigned long)&_mem_stack_base;
 	start_armboot();

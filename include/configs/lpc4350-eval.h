@@ -37,7 +37,7 @@
 /*
  * Disable debug messages
  */
-// #undef DEBUG
+#undef DEBUG
 
 
 
@@ -65,6 +65,12 @@
  * to the Boot ROM bootloader.
  */
 // #define CONFIG_LPC18XX_BOOTHEADER
+
+
+#define CONFIG_USB_TTY
+#define CONFIG_LPC18XX_USB
+#define USE_USB0
+
 
 /*
  * Enable GPIO driver
@@ -281,12 +287,17 @@
 #else
 #define CONFIG_LPC18XX_NORFLASH_IMAGE_OFFSET	0x0
 #endif
+
+
 /*
  * Serial console configuration
  */
 #define CONFIG_SYS_NS16550		1
 #undef CONFIG_NS16550_MIN_FUNCTIONS
 #define CONFIG_SYS_NS16550_SERIAL	1
+
+
+
 /*
  * Registers are 32-bit. The negative value tells the ns16550 driver that
  * registers should be post-padded with zeroes (because the CPU is in

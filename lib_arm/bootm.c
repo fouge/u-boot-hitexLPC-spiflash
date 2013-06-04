@@ -123,6 +123,11 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 	}
 #endif
 
+#ifdef CONFIG_LPC18XX_USB
+	extern void USB_Connect (uint32_t con);
+	USB_Connect(0);
+#endif
+
 	cleanup_before_linux ();
 
 	theKernel (0, machid, bd->bi_boot_params);
