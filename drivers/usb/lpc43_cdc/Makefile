@@ -31,7 +31,6 @@ COBJS-y += usbcore.o
 COBJS-y += usbdesc.o
 COBJS-y += usbhw.o
 COBJS-y += usbuser.o
-COBJS-y += serial.o
 endif
 
 COBJS	:= $(COBJS-y)

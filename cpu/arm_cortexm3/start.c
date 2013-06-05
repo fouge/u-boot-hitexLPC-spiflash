@@ -198,9 +198,10 @@ void
 		*(NVIC_ICPR+irqpendloop)= 0xFFFFFFFF;
 	}
 
+#ifdef CONFIG_LPC18XX_USB
 	// Reenable interrupts
 	__enable_irq();
-
+#endif
 
 	// ******************************
 	// Check to see if we are running the code from a non-zero

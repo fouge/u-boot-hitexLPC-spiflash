@@ -41,7 +41,7 @@ unsigned char __align(4) NotificationBuf [10];
 #endif
 CDC_LINE_CODING CDC_LineCoding  = {9600, 0, 0, 8};
 unsigned short  CDC_SerialState = 0x0000;
-unsigned short  CDC_DepInEmpty  = 1;                   // Data IN EP is empty
+volatile unsigned short  CDC_DepInEmpty  = 1;                   // Data IN EP is empty
 
 /*----------------------------------------------------------------------------
   We need a buffer for incomming data on USB port because USB receives
@@ -217,24 +217,8 @@ uint32_t CDC_SetLineCoding (void) {
   CDC_LineCoding.bParityType =  EP0Buf[5];
   CDC_LineCoding.bDataBits   =  EP0Buf[6];
 
-#if PORT_NUM
-  ser_ClosePort(1);
-  ser_OpenPort (1);
-  ser_InitPort1 (CDC_LineCoding.dwDTERate,
-                CDC_LineCoding.bDataBits,
-                CDC_LineCoding.bParityType,
-                CDC_LineCoding.bCharFormat);
-#else
-  ser_ClosePort(0);
-  ser_OpenPort (0);
-  ser_InitPort0 (CDC_LineCoding.dwDTERate,
-                CDC_LineCoding.bDataBits,
-                CDC_LineCoding.bParityType,
-                CDC_LineCoding.bCharFormat);
-#endif
   return (TRUE);
 }
-
 
 /*----------------------------------------------------------------------------
   CDC GetLineCoding Request Callback
@@ -289,10 +273,10 @@ uint32_t CDC_SendBreak (unsigned short wDurationOfBreak) {
   Parameters:   none
   Return Value: none
  *---------------------------------------------------------------------------*/
-void CDC_BulkIn(void) {
-  int numBytesRead, numBytesAvail;
+ void CDC_BulkIn(void) {
 
-  ser_AvailChar (&numBytesAvail);
+	  /* 	int numBytesRead, numBytesAvail;
+		ser_AvailChar (&numBytesAvail);
 
   // ... add code to check for overwrite
 
@@ -302,9 +286,9 @@ void CDC_BulkIn(void) {
   if (numBytesRead > 0) {
 	USB_WriteEP (CDC_DEP_IN, &BulkBufIn[0], numBytesRead);
   }
-  else {
+  else { */
     CDC_DepInEmpty = 1;
-  }
+  // }
 }
 
 
@@ -327,47 +311,6 @@ void CDC_BulkOut(void) {
 }
 
 
-/*----------------------------------------------------------------------------
-  Get the SERIAL_STATE as defined in usbcdc11.pdf, 6.3.5, Table 69.
-  Parameters:   none
-  Return Value: SerialState as defined in usbcdc11.pdf
- *---------------------------------------------------------------------------*/
-unsigned short CDC_GetSerialState (void) {
-  unsigned short temp;
-
-  CDC_SerialState = 0;
-  ser_LineState (&temp);
-
-  if (temp & 0x8000)  CDC_SerialState |= CDC_SERIAL_STATE_RX_CARRIER;
-  if (temp & 0x2000)  CDC_SerialState |= CDC_SERIAL_STATE_TX_CARRIER;
-  if (temp & 0x0010)  CDC_SerialState |= CDC_SERIAL_STATE_BREAK;
-  if (temp & 0x4000)  CDC_SerialState |= CDC_SERIAL_STATE_RING;
-  if (temp & 0x0008)  CDC_SerialState |= CDC_SERIAL_STATE_FRAMING;
-  if (temp & 0x0004)  CDC_SerialState |= CDC_SERIAL_STATE_PARITY;
-  if (temp & 0x0002)  CDC_SerialState |= CDC_SERIAL_STATE_OVERRUN;
-
-  return (CDC_SerialState);
-}
-
-
-/*----------------------------------------------------------------------------
-  Send the SERIAL_STATE notification as defined in usbcdc11.pdf, 6.3.5.
- *---------------------------------------------------------------------------*/
-void CDC_NotificationIn (void) {
-
-  NotificationBuf[0] = 0xA1;                           // bmRequestType
-  NotificationBuf[1] = CDC_NOTIFICATION_SERIAL_STATE;  // bNotification (SERIAL_STATE)
-  NotificationBuf[2] = 0x00;                           // wValue
-  NotificationBuf[3] = 0x00;
-  NotificationBuf[4] = 0x00;                           // wIndex (Interface #, LSB first)
-  NotificationBuf[5] = 0x00;
-  NotificationBuf[6] = 0x02;                           // wLength (Data length = 2 bytes, LSB first)
-  NotificationBuf[7] = 0x00;
-  NotificationBuf[8] = (CDC_SerialState >>  0) & 0xFF; // UART State Bitmap (16bits, LSB first)
-  NotificationBuf[9] = (CDC_SerialState >>  8) & 0xFF;
-
-  USB_WriteEP (CDC_CEP_IN, &NotificationBuf[0], 10);   // send notification
-}
 void CDC_BulkOutNak(void){
 
     USB_ReadReqEP(CDC_DEP_OUT, &BulkBufOut[0], 64);

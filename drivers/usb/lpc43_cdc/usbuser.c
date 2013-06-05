@@ -25,7 +25,6 @@
 #include "usb/lpc18xx_usb/usbcore.h"
 #include "usb/lpc18xx_usb/usbuser.h"
 #include "usb/lpc18xx_usb/cdcuser.h"
-#include "common.h"
 
 
 /*
@@ -170,11 +169,11 @@ void USB_EndPoint1 (uint32_t event) {
 
   switch (event) {
     case USB_EVT_IN:
-      temp = CDC_GetSerialState();
+     /* temp = CDC_GetSerialState();
       if (serialState != temp) {
          serialState = temp;
-         CDC_NotificationIn();            /* send SERIAL_STATE notification */
-      }
+         CDC_NotificationIn();    // send SERIAL_STATE notification
+      } */
       break;
   }
 }
@@ -187,7 +186,7 @@ void USB_EndPoint1 (uint32_t event) {
  */
 
 void USB_EndPoint2 (uint32_t event) {
-	  debug("EP2 : event : %d\n", event);
+
   switch (event) {
   case USB_EVT_OUT_NAK:
       CDC_BulkOutNak();

@@ -28,6 +28,7 @@
 #include "usb/lpc18xx_usb/usbdesc.h"
 
 
+
 /* USB Standard Device Descriptor */
 const uint8_t USB_DeviceDescriptor[] = {
   USB_DEVICE_DESC_SIZE,              /* bLength */

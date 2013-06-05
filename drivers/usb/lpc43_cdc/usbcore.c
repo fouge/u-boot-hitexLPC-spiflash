@@ -30,7 +30,6 @@
 #include "usb/lpc18xx_usb/usbcore.h"
 #include "usb/lpc18xx_usb/usbdesc.h"
 #include "usb/lpc18xx_usb/usbuser.h"
-#include "common.h"
 
 #if (USB_CLASS)
 
@@ -72,7 +71,7 @@ extern MSC_CSW CSW;
 
 uint16_t  USB_DeviceStatus;
 uint8_t  USB_DeviceAddress;
-uint8_t  USB_Configuration;
+volatile uint8_t  USB_Configuration;
 uint32_t USB_EndPointMask;
 uint32_t USB_EndPointHalt;
 uint32_t USB_EndPointStall;                         /* EP must stay stalled */
@@ -425,7 +424,6 @@ INLINE uint32_t USB_ReqGetConfiguration (void) {
   switch (SetupPacket.bmRequestType.BM.Recipient) {
     case REQUEST_TO_DEVICE:
       EP0Data.pData = &USB_Configuration;
-      debug("USB config = %d", USB_Configuration);
       break;
     default:
       return (FALSE);
@@ -459,7 +457,6 @@ INLINE uint32_t USB_ReqSetConfiguration (void) {
             case USB_CONFIGURATION_DESCRIPTOR_TYPE:
               if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bConfigurationValue == SetupPacket.wValue.WB.L) {
                 USB_Configuration = SetupPacket.wValue.WB.L;
-                debug("USB_Configuration : %d", USB_Configuration);
                 USB_NumInterfaces = ((USB_CONFIGURATION_DESCRIPTOR *)pD)->bNumInterfaces;
                 for (n = 0; n < USB_IF_NUM; n++) {
                   USB_AltSetting[n] = 0;
@@ -635,7 +632,6 @@ INLINE uint32_t USB_ReqSetInterface (void) {
  
 void USB_EndPoint0 (uint32_t event) {
 
-	  debug("EP0 event : %d\n", event);
   switch (event) {
     case USB_EVT_SETUP:
       USB_SetupStage();
@@ -644,7 +640,6 @@ void USB_EndPoint0 (uint32_t event) {
       switch (SetupPacket.bmRequestType.BM.Type) {
 
         case REQUEST_STANDARD:
-      	  debug("\tEP0 event setup, request std : %d\n", SetupPacket.bRequest);
           switch (SetupPacket.bRequest) {
             case USB_REQUEST_GET_STATUS:
               if (!USB_ReqGetStatus()) {
@@ -1038,7 +1033,7 @@ stall_i:  USB_SetStallEP(0x80);
                           break;
                         case CDC_SET_LINE_CODING:
                           if (CDC_SetLineCoding()) {
-                            USB_StatusInStage();                         /* send Acknowledge */
+                            USB_StatusInStage();     // send Acknowledge
                             goto out_class_ok;
                           }
                           break;

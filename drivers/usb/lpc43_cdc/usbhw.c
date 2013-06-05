@@ -37,7 +37,6 @@
 #include "usb/lpc18xx_usb/usbcore.h"
 #include "asm/arch/lpc43xx_scu.h"
 #include "asm/arch/lpc43xx_cgu.h"
-#include <common.h>
 
 #ifdef __CC_ARM
 #pragma diag_suppress 1441
@@ -681,11 +680,9 @@ void USB1_IRQHandler (void)
   LPC_USB->USBSTS_D = disr;
 
 
-
   /* Device Status Interrupt (Reset, Connect change, Suspend/Resume) */
   if (disr & USBSTS_URI)                      /* Reset */
   {
-	  debug("Interrupt Reset\n");
     USB_Reset();
     if (g_drv.USB_Reset_Event)
       g_drv.USB_Reset_Event();
@@ -694,14 +691,12 @@ void USB1_IRQHandler (void)
 
   if (disr & USBSTS_SLI)                   /* Suspend */
   {
-	  debug("Interrupt Suspend\n");
     if (g_drv.USB_Suspend_Event)
       g_drv.USB_Suspend_Event();
   }
 
   if (disr & USBSTS_PCI)                  /* Resume */
   {
-	  debug("Interrupt Resume\n");
     /* check if device isoperating in HS mode or full speed */
     if (LPC_USB->PORTSC1_D & (1<<9))
       DevStatusFS2HS = TRUE;
@@ -714,7 +709,6 @@ void USB1_IRQHandler (void)
   val = LPC_USB->ENDPTSETUPSTAT;
   /* Only EP0 will have setup packets so call EP0 handler */
   if (val){
-	  debug("Setup packet\n");
     /* Clear the endpoint complete CTRL OUT & IN when */
     /* a Setup is received */
     LPC_USB->ENDPTCOMPLETE = 0x00010001;
@@ -729,7 +723,6 @@ void USB1_IRQHandler (void)
   val = LPC_USB->ENDPTCOMPLETE;
   if (val)
   {
-	  debug("completion interrupts\n");
     LPC_USB->ENDPTNAK = val;
     for (n = 0; n < EP_NUM_MAX / 2; n++)
     {

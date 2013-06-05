@@ -58,7 +58,7 @@ extern DTD_T ep_TD[EP_NUM_MAX];
 
 
 LPC_USBDRV_INIT_T usb_cb;
-extern uint8_t USB_Configuration;
+extern volatile uint8_t USB_Configuration;
 
 
 static struct stdio_dev usbttydev;
@@ -156,10 +156,13 @@ static int next_nl_pos (const char *s)
 
 static void __usbtty_puts (const char *str, int len)
 {
-	if (CDC_DepInEmpty) {
-      CDC_DepInEmpty = 0;
-	  USB_WriteEP (CDC_DEP_IN, (unsigned char *)str, len);
-    }
+	while(!CDC_DepInEmpty);
+	if(CDC_DepInEmpty)
+	{
+		CDC_DepInEmpty = 0;
+		USB_WriteEP (CDC_DEP_IN, (unsigned char *)str, len);
+	}
+
 }
 
 void usbtty_puts (const char *str)
@@ -200,7 +203,7 @@ void VCOM_Init(void) {
 #endif
 }
 
-
+extern int nInterrupt;
 /*
  * Initialize the usb client port.
  *
@@ -210,8 +213,6 @@ int drv_usbtty_init (void)
 
 	LPC_USBDRV_INIT_T usb_cb;
 
-/*	CGU_Init();
-	IOInit(); */
 
 	/* initilize call back structures */
 		memset((void*)&usb_cb, 0, sizeof(LPC_USBDRV_INIT_T));
@@ -224,12 +225,11 @@ int drv_usbtty_init (void)
 		VCOM_Init();
 
 		USB_Init(&usb_cb);  // USB Initialization
+
 		USB_Connect(1);     // USB Connect
 
-		while (!USB_Configuration) ;	 // wait until USB is configured
+		while (!USB_Configuration);	  // wait until USB is configured
 
-		printf("Console is about to move to USB.\n");
-		debug("USB connected and configured.\n");
 		/* Device initialization */
 		memset (&usbttydev, 0, sizeof (usbttydev));
 
@@ -240,7 +240,6 @@ int drv_usbtty_init (void)
 		usbttydev.getc = usbtty_getc;	/* 'getc' function */
 		usbttydev.putc = usbtty_putc;	/* 'putc' function */
 		usbttydev.puts = usbtty_puts;	/* 'puts' function */
-		debug("Console is about to be registered in USB.\n");
 
 		if(!stdio_register(&usbttydev))
 			return 1;
