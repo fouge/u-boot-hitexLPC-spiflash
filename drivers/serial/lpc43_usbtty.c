@@ -129,11 +129,12 @@ int usbtty_getc (void)
  */
 void usbtty_putc (const char c)
 {
+	while(!CDC_DepInEmpty);
     if (CDC_DepInEmpty) {
       CDC_DepInEmpty = 0;
 	  USB_WriteEP (CDC_DEP_IN, (unsigned char *)&c, 1);
       if (c == '\n')
-    	  USB_WriteEP (CDC_DEP_IN, (unsigned char *)"\r", 1);
+    	  usbtty_putc('\r');
     }
 
 }
@@ -241,8 +242,18 @@ int drv_usbtty_init (void)
 		usbttydev.putc = usbtty_putc;	/* 'putc' function */
 		usbttydev.puts = usbtty_puts;	/* 'puts' function */
 
-		if(!stdio_register(&usbttydev))
-			return 1;
+		char * tt;
+		if(!(tt = getenv("usbtty"))) {
+			tt = "generic";
+		}
+
+		if(!strcmp(tt,"cdc_acm"))
+		{
+			if(!stdio_register(&usbttydev))
+				return 1;
+			else
+				return -1;
+		}
 		else
 			return -1;
 }

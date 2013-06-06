@@ -67,6 +67,9 @@
 // #define CONFIG_LPC18XX_BOOTHEADER
 
 
+/*
+ * Console over USB
+ */
 #define CONFIG_USB_TTY
 #define CONFIG_LPC18XX_USB
 #define USE_USB0

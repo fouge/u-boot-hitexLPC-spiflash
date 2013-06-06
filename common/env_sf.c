@@ -80,16 +80,13 @@ int saveenv(void){
 
 	char buffer[CONFIG_ENV_SIZE];
 	char * env2 = (char*)CONFIG_ENV2_ADDR;
-	/*
-	 * TODO Protection !
-	 */
 	int i;
 	for(i=0; i<CONFIG_ENV_SIZE; i++)
 		buffer[i] = env2[i];
 
 	printf("Protection will be removed and restored.\n");
 	/* SAVE bank 2 to 1*/
-	printf("Backing up old environment at 0x%x", CONFIG_ENV1_ADDR);
+	printf("Backing up old environment at 0x%x..", CONFIG_ENV1_ADDR);
 	if(spifi_lpc_program((char*)CONFIG_ENV1_ADDR, buffer, CONFIG_ENV_SIZE, 0, S_FORCE_ERASE))
 		printf(". failed.\n");
 	else
