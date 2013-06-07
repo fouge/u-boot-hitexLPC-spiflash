@@ -2072,8 +2072,12 @@ unsigned long flash_init (void)
 		debug("SPI FLASH Device Type = 0x%x \n\r", obj.devType);
 		debug("SPI FLASH Device ID = 0x%x \n\r", obj.devID);
 		debug("SPI FLASH Speed = %dMHz Clock Rate \n\r", mhz);
-		printf("SPIFI size : ");
-		print_size (obj.memSize, "\n");
+		printf("SPI Flash size : ");
+		print_size (obj.memSize, ".");
+		if(spifi_protect_fract(4))
+			printf("\t\tFailed to protect sectors\n");
+		else
+			printf("\t\tThe first 4 sectors are protected\n");
 
 		size += obj.memSize;
 #endif

@@ -16,12 +16,20 @@ MEMORY
 }
 SECTIONS
 {
- .vectors (0x14000000) :
+ .vectors :
  {
   *(.vectors)
+  
+ } >Local_SRAM128 AT>SPIFI
+ 
+ .lpc18xx_image_top :
+ {
    /* Global Section Table */
         . = ALIGN(4) ;
         __section_table_start = .;
+        LONG(LOADADDR(.vectors));
+        LONG(    ADDR(.vectors));
+        LONG(  SIZEOF(.vectors));
         LONG(LOADADDR(.text));
         LONG(    ADDR(.text));
         LONG(  SIZEOF(.text));
@@ -36,13 +44,7 @@ SECTIONS
         LONG(  SIZEOF(.data));
         __section_table_end = . ;
     /* Global Section Table end */
- } >SPIFI
- .kinetis_flash_conf 0x00000400 :
- {
-  KEEP(*(.kinetis_flash_conf))
- } >SPIFI
- .lpc18xx_image_top :
- {
+    
   *(.lpc18xx_image_top_text)
   *(.lpc18xx_image_top_data)
  } >SPIFI

@@ -38,6 +38,8 @@
 #include "asm/arch/lpc43xx_scu.h"
 #include "asm/arch/lpc43xx_cgu.h"
 
+extern volatile unsigned int talking;
+
 #ifdef __CC_ARM
 #pragma diag_suppress 1441
 #endif
@@ -700,7 +702,7 @@ void USB1_IRQHandler (void)
     /* check if device isoperating in HS mode or full speed */
     if (LPC_USB->PORTSC1_D & (1<<9))
       DevStatusFS2HS = TRUE;
-
+    talking = 1;
     if (g_drv.USB_Resume_Event)
       g_drv.USB_Resume_Event();
   }

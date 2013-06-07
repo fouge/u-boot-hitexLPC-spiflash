@@ -42,7 +42,8 @@ unsigned char __align(4) NotificationBuf [10];
 CDC_LINE_CODING CDC_LineCoding  = {9600, 0, 0, 8};
 unsigned short  CDC_SerialState = 0x0000;
 volatile unsigned short  CDC_DepInEmpty  = 1;                   // Data IN EP is empty
-
+volatile unsigned int connected = 0;
+volatile unsigned int talking = 0;
 /*----------------------------------------------------------------------------
   We need a buffer for incomming data on USB port because USB receives
   much faster than  UART transmits
@@ -274,21 +275,8 @@ uint32_t CDC_SendBreak (unsigned short wDurationOfBreak) {
   Return Value: none
  *---------------------------------------------------------------------------*/
  void CDC_BulkIn(void) {
-
-	  /* 	int numBytesRead, numBytesAvail;
-		ser_AvailChar (&numBytesAvail);
-
-  // ... add code to check for overwrite
-
-  numBytesRead = ser_Read ((char *)&BulkBufIn[0], &numBytesAvail);
-
-  // send over USB
-  if (numBytesRead > 0) {
-	USB_WriteEP (CDC_DEP_IN, &BulkBufIn[0], numBytesRead);
-  }
-  else { */
+	 talking = 1;
     CDC_DepInEmpty = 1;
-  // }
 }
 
 

@@ -26,6 +26,8 @@
 #include "usb/lpc18xx_usb/usbuser.h"
 #include "usb/lpc18xx_usb/cdcuser.h"
 
+extern volatile unsigned int talking;
+extern volatile unsigned int connected;
 
 /*
  *  USB Power Event Callback
@@ -58,6 +60,7 @@ void USB_Reset_Event (void) {
 
 #if USB_SUSPEND_EVENT
 void USB_Suspend_Event (void) {
+	talking = 0;
 }
 #endif
 

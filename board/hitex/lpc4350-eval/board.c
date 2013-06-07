@@ -678,7 +678,7 @@ int board_init(void)
  */
 int checkboard(void)
 {
-	printf("Board: Hitex LPC4350 Eval rev %s, Boot from SPIFI only\n",
+	printf("Board: Hitex LPC4350 Eval rev %s.\n",
 		CONFIG_SYS_BOARD_REV_STR);
 
 	return 0;

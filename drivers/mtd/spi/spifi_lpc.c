@@ -26,9 +26,7 @@ int32_t spifi_lpc_erase(char* start_addr, uint32_t nBytes, char* scratch){
   	opers.protect = -1; /* save & restore protection */
   	opers.options = S_CALLER_ERASE | S_VERIFY_ERASE | S_CALLER_PROT; /* Erase if not 0xFFFF and then verify memory */
 
-  	NVIC_DisableIRQ(USB0_IRQn);
 	ret = pSpifi->spifi_erase(&obj, &opers);
-	NVIC_EnableIRQ(USB0_IRQn); //  reenable USB0 interrrupts
 	return ret;
 }
 
@@ -43,9 +41,7 @@ int32_t spifi_lpc_program(char* dest, char* addr_src, uint32_t length, char* scr
 	opers.protect = -1; /* save & restore protection */
 	opers.options = options;
 	opers.dest = (char *)dest;
-  	NVIC_DisableIRQ(USB0_IRQn);
 	ret = pSpifi->spifi_program(&obj, (char *)addr_src, &opers);
-	NVIC_EnableIRQ(USB0_IRQn); //  reenable USB0 interrrupts
 	return ret;
 }
 
@@ -76,9 +72,7 @@ uint32_t spifi_protect_all(int onoff){
 		opers.protect = obj.stat.hw & 0xFFE3; /* All Block Protect bits set to 0*/
 	}
 	opers.dest = (char *)0x80000000;
-	NVIC_DisableIRQ(USB0_IRQn);
 	unsigned int ret = pSpifi->spifi_program(&obj, (char *)0x80000000, &opers);
-	NVIC_EnableIRQ(USB0_IRQn); //  reenable USB0 interrrupts
 	debug("SPI Flash Status register 0x%x\n", obj.stat.hw);
 	return ret;
 }
@@ -100,9 +94,7 @@ uint32_t spifi_protect_fract(unsigned int nSectors){
 		{
 			opers.protect = (prot<<2) | (0x20 << 8);
 			opers.dest = (char *)0x80000000;
-		  	NVIC_DisableIRQ(USB0_IRQn);
 			unsigned int ret = pSpifi->spifi_program(&obj, (char *)0x80000000, &opers);
-			NVIC_EnableIRQ(USB0_IRQn); //  reenable USB0 interrrupts
 			debug("SPI Flash Status register 0x%x\n", obj.stat.hw);
 			return ret;
 		}

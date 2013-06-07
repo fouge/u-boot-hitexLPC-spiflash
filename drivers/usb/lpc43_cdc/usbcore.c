@@ -31,6 +31,8 @@
 #include "usb/lpc18xx_usb/usbdesc.h"
 #include "usb/lpc18xx_usb/usbuser.h"
 
+extern volatile unsigned int connected;
+
 #if (USB_CLASS)
 
 #if (USB_AUDIO)
@@ -457,6 +459,7 @@ INLINE uint32_t USB_ReqSetConfiguration (void) {
             case USB_CONFIGURATION_DESCRIPTOR_TYPE:
               if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bConfigurationValue == SetupPacket.wValue.WB.L) {
                 USB_Configuration = SetupPacket.wValue.WB.L;
+                connected = 1;
                 USB_NumInterfaces = ((USB_CONFIGURATION_DESCRIPTOR *)pD)->bNumInterfaces;
                 for (n = 0; n < USB_IF_NUM; n++) {
                   USB_AltSetting[n] = 0;

@@ -59,7 +59,10 @@ extern DTD_T ep_TD[EP_NUM_MAX];
 
 LPC_USBDRV_INIT_T usb_cb;
 extern volatile uint8_t USB_Configuration;
+extern volatile unsigned int connected;
+extern volatile unsigned int talking;
 
+#define mdelay(n) ({unsigned long msec=(n); while (msec--) udelay(1000);})
 
 static struct stdio_dev usbttydev;
 
@@ -109,19 +112,6 @@ int usbtty_getc (void)
     }
     return 0;
 
-	/* char c;
-	struct usb_endpoint_instance *endpoint =
-		&endpoint_instance[rx_endpoint];
-
-	while (usbtty_input.size <= 0) {
-		udc_unset_nak(endpoint->endpoint_address&0x03);
-		usbtty_poll ();
-	}
-
-	buf_pop (&usbtty_input, &c, 1);
-	udc_set_nak(endpoint->endpoint_address&0x03);
-
-	return c; */
 }
 
 /*
@@ -129,14 +119,15 @@ int usbtty_getc (void)
  */
 void usbtty_putc (const char c)
 {
-	while(!CDC_DepInEmpty);
-    if (CDC_DepInEmpty) {
-      CDC_DepInEmpty = 0;
-	  USB_WriteEP (CDC_DEP_IN, (unsigned char *)&c, 1);
-      if (c == '\n')
-    	  usbtty_putc('\r');
-    }
-
+		if(talking){
+			while(!CDC_DepInEmpty);
+			if (CDC_DepInEmpty) {
+			  CDC_DepInEmpty = 0;
+			  USB_WriteEP (CDC_DEP_IN, (unsigned char *)&c, 1);
+			  if (c == '\n')
+				  usbtty_putc('\r');
+			}
+		}
 }
 
 /* usbtty_puts() helper function for finding the next '\n' in a string */
@@ -157,12 +148,14 @@ static int next_nl_pos (const char *s)
 
 static void __usbtty_puts (const char *str, int len)
 {
-	while(!CDC_DepInEmpty);
-	if(CDC_DepInEmpty)
-	{
-		CDC_DepInEmpty = 0;
-		USB_WriteEP (CDC_DEP_IN, (unsigned char *)str, len);
-	}
+		if(talking){
+			while(!CDC_DepInEmpty);
+			if(CDC_DepInEmpty)
+			{
+				CDC_DepInEmpty = 0;
+				USB_WriteEP (CDC_DEP_IN, (unsigned char *)str, len);
+			}
+		}
 
 }
 
@@ -212,12 +205,20 @@ extern int nInterrupt;
 int drv_usbtty_init (void)
 {
 
-	LPC_USBDRV_INIT_T usb_cb;
+	char * tt;
+	if(!(tt = getenv("usbtty"))) {
+		tt = "generic";
+	}
+
+	if(!strcmp(tt,"cdc_acm"))
+	{
+		LPC_USBDRV_INIT_T usb_cb;
 
 
 	/* initilize call back structures */
 		memset((void*)&usb_cb, 0, sizeof(LPC_USBDRV_INIT_T));
 		usb_cb.USB_Reset_Event = USB_Reset_Event;
+		usb_cb.USB_Suspend_Event = USB_Suspend_Event;
 		usb_cb.USB_P_EP[0] = USB_EndPoint0;
 		usb_cb.USB_P_EP[1] = USB_EndPoint1;
 		usb_cb.USB_P_EP[2] = USB_EndPoint2;
@@ -228,8 +229,6 @@ int drv_usbtty_init (void)
 		USB_Init(&usb_cb);  // USB Initialization
 
 		USB_Connect(1);     // USB Connect
-
-		while (!USB_Configuration);	  // wait until USB is configured
 
 		/* Device initialization */
 		memset (&usbttydev, 0, sizeof (usbttydev));
@@ -242,18 +241,11 @@ int drv_usbtty_init (void)
 		usbttydev.putc = usbtty_putc;	/* 'putc' function */
 		usbttydev.puts = usbtty_puts;	/* 'puts' function */
 
-		char * tt;
-		if(!(tt = getenv("usbtty"))) {
-			tt = "generic";
-		}
-
-		if(!strcmp(tt,"cdc_acm"))
-		{
 			if(!stdio_register(&usbttydev))
 				return 1;
 			else
 				return -1;
 		}
-		else
-			return -1;
+
+		return -1;
 }

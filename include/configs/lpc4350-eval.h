@@ -145,7 +145,7 @@
  * Used in u-boot.lds generation.
  * Useless in this case (boot from SPIFI only) because addresses are fixed
  */
-#define CONFIG_MEM_NVM_BASE		0x14000000
+#define CONFIG_MEM_NVM_BASE		0x00000000
 #define CONFIG_MEM_NVM_LEN		(128 * 1024)
 
 #define CONFIG_MEM_RAM_BASE		0x20000000

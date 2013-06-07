@@ -140,6 +140,9 @@ uchar default_environment[] = {
 #ifdef  CONFIG_EXTRA_ENV_SETTINGS
 	CONFIG_EXTRA_ENV_SETTINGS
 #endif
+#ifdef CONFIG_LPC18XX_USB
+	"usbtty=cdc_acm\0"
+#endif
 	"\0"
 };
 
